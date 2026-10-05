@@ -308,6 +308,10 @@
 
   <!-- REJTEK TARTALMAK (KÖZVETLEN DOM SZERKEZET) -->
   <div id="appsStorage" class="hidden">
+    <!-- === RUBIK KOCKA === -->
+  <div id="view-rubik" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative">
+    <iframe src="rubik.html" class="w-full h-full border-0 block bg-slate-950"></iframe>
+  </div>
     
     <!-- === 1. RAJZTÁBLA (PAINT) === -->
     <div id="view-paint" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">
@@ -3236,6 +3240,14 @@ Hanna</textarea>
   <script>
     /* 11. CSEMPÉK ÉS ALKALMAZÁS VÁLTÓ */
     const appList = [
+      {
+      id: 'rubik',
+      title: 'Rubik-kocka',
+      icon: '🧊',
+      color: 'from-blue-600 via-indigo-600 to-purple-600',
+      textColor: 'text-white',
+      viewId: 'view-rubik'
+    },
       {
         id: 'paint',
         title: 'Rajztábla',
