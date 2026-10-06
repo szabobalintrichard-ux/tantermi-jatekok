@@ -3125,7 +3125,7 @@ window.addEventListener('resize', resizeBubbleCanvas);
 
 class WinBubble {
     constructor() {
-        this.r = Math.random() * 45 + 35; // buborék sugara
+        this.r = 50; 
         this.x = Math.random() * (bubbleCanvas.width - this.r * 2) + this.r;
         this.y = Math.random() * (bubbleCanvas.height - this.r * 2) + this.r;
         this.vx = (Math.random() - 0.5) * 3;
@@ -3185,9 +3185,46 @@ function initBubbles() {
     }
 }
 
+function handleBubbleCollisions() {
+    for (let i = 0; i < bubbles.length; i++) {
+        for (let j = i + 1; j < bubbles.length; j++) {
+            const b1 = bubbles[i];
+            const b2 = bubbles[j];
+
+            const dx = b2.x - b1.x;
+            const dy = b2.y - b1.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = b1.r + b2.r;
+
+            if (dist < minDist && dist > 0) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+
+                const kx = b1.vx - b2.vx;
+                const ky = b1.vy - b2.vy;
+                const p = 2 * (nx * kx + ny * ky) / 2;
+
+                b1.vx -= p * nx;
+                b1.vy -= p * ny;
+                b2.vx += p * nx;
+                b2.vy += p * ny;
+
+                const overlap = (minDist - dist) / 2;
+                b1.x -= nx * overlap;
+                b1.y -= ny * overlap;
+                b2.x += nx * overlap;
+                b2.y += ny * overlap;
+            }
+        }
+    }
+}
+
 function loopBubbles() {
     if (!screensaverActive) return;
     bCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+    
+    handleBubbleCollisions();
+
     for (let b of bubbles) {
         b.update();
         b.draw();
