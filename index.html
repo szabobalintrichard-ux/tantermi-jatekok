@@ -3106,7 +3106,9 @@ function backToShelf() {
     document.getElementById('lib-shelf').classList.remove('hidden');
     document.getElementById('lib-iframe').src = 'about:blank';
 }
-    /* === WINDOWS BUBORÉK KÉPERNYŐVÉDŐ === */
+    let currentAppActive = null;
+
+/* === WINDOWS BUBORÉK KÉPERNYŐVÉDŐ === */
 const bubbleCanvas = document.getElementById('bubbleScreensaver');
 const bCtx = bubbleCanvas.getContext('2d');
 let screensaverTimer = null;
@@ -3357,7 +3359,6 @@ resetScreensaverTimer();
       }
     ];
 
-    let currentAppActive = null;
 
     function renderDashboardTiles() {
       const grid = document.getElementById('tilesGrid');
