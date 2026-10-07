@@ -311,6 +311,11 @@
   <!-- REJTEK TARTALMAK (KÖZVETLEN DOM SZERKEZET) -->
   <div id="appsStorage" class="hidden">
     
+    <!-- === ELTŰNŐ AMŐBA === -->
+<div id="view-amoba" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
+  <iframe src="amoba.html" class="w-full h-full border-0"></iframe>
+</div>
+    
     <!-- === 1. RAJZTÁBLA (PAINT) === -->
     <div id="view-paint" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
 <iframe src="https://excalidraw.com" class="w-full h-full border-0"></iframe>
@@ -3293,6 +3298,14 @@ resetScreensaverTimer();
         textColor: 'text-white',
         viewId: 'view-paint'
       },
+      {
+    id: 'amoba',
+    title: 'Eltűnő Amőba',
+    icon: 'ph-grid-four',
+    color: 'from-indigo-600 via-purple-600 to-rose-500',
+    textColor: 'text-white',
+    viewId: 'view-amoba'
+  },
      {
             id: 'library',
             title: 'Könyvtár',
@@ -3413,7 +3426,7 @@ resetScreensaverTimer();
       iconEl.className = `w-9 h-9 rounded-xl flex items-center justify-center text-xl font-bold bg-gradient-to-tr ${app.color} shadow`;
       iconEl.innerHTML = app.icon.startsWith('ph-') ? `<i class="ph-bold ${app.icon}"></i>` : app.icon;
 
-      if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu') {
+     if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba') {
         frameEl.className = "flex-1 w-full h-full p-1 sm:p-2 overflow-hidden flex flex-col bg-slate-950";
       } else {
         frameEl.className = "flex-1 w-full h-full p-3 md:p-6 overflow-y-auto flex items-center justify-center bg-slate-950";
