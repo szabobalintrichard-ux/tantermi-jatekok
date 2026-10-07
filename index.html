@@ -3233,9 +3233,9 @@ function loopBubbles() {
 }
 
 function startScreensaver() {
-    // Csak a főmenüben indul el
-    const appFrame = document.getElementById('appFrame');
-    const isInsideApp = appFrame && !appFrame.classList.contains('hidden') && appFrame.innerHTML.trim() !== '' && !appFrame.innerHTML.includes('Ide váltanak az eszközök');
+    // Ha meg van nyitva egy alkalmazás, NEM indulhat el a képernyővédő
+    const appContainer = document.getElementById('appContainer');
+    const isInsideApp = currentAppActive !== null || (appContainer && !appContainer.classList.contains('hidden'));
     
     if (isInsideApp) return;
 
@@ -3258,6 +3258,12 @@ function stopScreensaver() {
 
 function resetScreensaverTimer() {
     clearTimeout(screensaverTimer);
+
+    // Ha meg van nyitva egy alkalmazás, a háttérben se számláljon az időzítő
+    const appContainer = document.getElementById('appContainer');
+    const isInsideApp = currentAppActive !== null || (appContainer && !appContainer.classList.contains('hidden'));
+    if (isInsideApp) return;
+
     screensaverTimer = setTimeout(startScreensaver, IDLE_TIME);
 }
 
@@ -3388,8 +3394,9 @@ resetScreensaverTimer();
     }
 
     function openApp(app) {
-      playBeep('C5');
-      currentAppActive = app;
+  stopScreensaver();
+  playBeep('C5');
+  currentAppActive = app;
       const container = document.getElementById('appContainer');
       const titleEl = document.getElementById('activeAppTitle');
       const iconEl = document.getElementById('activeAppIcon');
@@ -3463,6 +3470,7 @@ resetScreensaverTimer();
 
       container.classList.add('hidden');
       currentAppActive = null;
+      resetScreensaverTimer();
     }
 
     window.addEventListener('resize', () => {
