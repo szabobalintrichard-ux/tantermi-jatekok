@@ -237,7 +237,10 @@
         </div>
       </div>
 
-
+<div class="w-full flex items-center justify-between mt-3 px-1 text-[11px] text-slate-400 font-medium">
+        <span id="b0ExpiringHint">Legidősebb jel eltűnik a 9. lépésnél</span>
+        <button id="resetBoard0Btn" class="hover:text-indigo-400 underline underline-offset-2">Pálya újraindítása</button>
+      </div>
     </div>
 
     <!-- 2. PÁLYA (Csak Dupla Páros 2v2 módban látható) -->
@@ -517,6 +520,9 @@
       }
       const hint0 = document.getElementById('b0ExpiringHint');
       const hint1 = document.getElementById('b1ExpiringHint');
+
+      if (hint0) hint0.textContent = hintText;
+      if (hint1) hint1.textContent = hintText;
     }
 
     function setGameMode(mode) {
