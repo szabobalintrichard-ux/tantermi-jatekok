@@ -162,7 +162,7 @@
     </div>
 
     <!-- Pontszám kijelző panel -->
-    <div class="grid grid-cols-3 gap-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-xl items-center">
+    <div class="hidden gap-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-xl items-center">
       <!-- Kék csapat / 1. játékos -->
       <div class="flex items-center gap-3 bg-indigo-500/10 border border-indigo-500/30 p-2 sm:p-2.5 rounded-xl">
         <div class="w-3.5 h-3.5 rounded-full bg-indigo-500 animate-pulse"></div>
@@ -198,7 +198,12 @@
     
     <!-- 1. PÁLYA (Páros módban ez a nagy központi tábla, 2v2-ben az 1. pálya) -->
     <div id="arena0" class="flex flex-col items-center bg-slate-900/60 border border-slate-800 rounded-3xl p-3 sm:p-5 shadow-2xl relative overflow-hidden w-full max-w-[460px] transition-all">
-
+    <!-- 1. Pálya saját pontszámlálója -->
+      <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+        <span class="text-indigo-400 font-bold text-sm">Kék (X)</span>
+        <div id="b0ScoreBadge" class="text-xl font-mono-num font-black text-slate-200 px-4 py-1 bg-slate-800/80 rounded-xl shadow-inner">0 : 0</div>
+        <span class="text-rose-400 font-bold text-sm">Piros (O)</span>
+      </div>
       <!-- Rács felület -->
       <div class="relative w-full aspect-square max-w-[380px] sm:max-w-[410px] p-2.5 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border border-slate-800/90 rounded-2xl shadow-inner touch-board-surface">
         <div id="gridBoard0" class="w-full h-full gap-2 sm:gap-2.5 touch-board-surface">
@@ -226,7 +231,14 @@
 
     <!-- 2. PÁLYA (Csak Dupla Páros 2v2 módban látható) -->
     <div id="arena1" class="hidden flex-col items-center bg-slate-900/60 border border-slate-800 rounded-3xl p-3 sm:p-5 shadow-2xl relative overflow-hidden w-full max-w-[460px] transition-all">
-
+      
+<!-- 2. Pálya saját pontszámlálója -->
+      <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+        <span class="text-indigo-400 font-bold text-sm">Kék (X)</span>
+        <div id="b1ScoreBadge" class="text-xl font-mono-num font-black text-slate-200 px-4 py-1 bg-slate-800/80 rounded-xl shadow-inner">0 : 0</div>
+        <span class="text-rose-400 font-bold text-sm">Piros (O)</span>
+      </div>
+      
       <!-- Rács felület -->
       <div class="relative w-full aspect-square max-w-[380px] sm:max-w-[410px] p-2.5 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border border-slate-800/90 rounded-2xl shadow-inner touch-board-surface">
         <div id="gridBoard1" class="w-full h-full gap-2 sm:gap-2.5 touch-board-surface">
