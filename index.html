@@ -321,6 +321,10 @@
 <div id="view-amoba" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
   <iframe src="amoba.html" class="w-full h-full border-0"></iframe>
 </div>
+    <!-- === SZÍNKEVERŐ === -->
+    <div id="view-szinkevero" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
+      <iframe src="szinkevero.html" class="w-full h-full border-0"></iframe>
+    </div>
     <!-- === RUBIK KOCKA === -->
     <div id="view-rubic" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
       <iframe src="rubic.html" class="w-full h-full border-0"></iframe>
@@ -3312,6 +3316,14 @@ resetScreensaverTimer();
         viewId: 'view-paint'
       },
       {
+        id: 'szinkevero',
+        title: 'Színkeverő',
+        icon: 'ph-palette',
+        color: 'from-fuchsia-600 via-pink-500 to-amber-400',
+        textColor: 'text-white',
+        viewId: 'view-szinkevero'
+      },
+      {
     id: 'amoba',
     title: 'Eltűnő Amőba',
     icon: 'ph-grid-four',
@@ -3447,7 +3459,7 @@ resetScreensaverTimer();
       iconEl.className = `w-9 h-9 rounded-xl flex items-center justify-center text-xl font-bold bg-gradient-to-tr ${app.color} shadow`;
       iconEl.innerHTML = app.icon.startsWith('ph-') ? `<i class="ph-bold ${app.icon}"></i>` : app.icon;
 
-   if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba' || app.id === 'rubic') {
+  if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba' || app.id === 'rubic' || app.id === 'szinkevero') {
         frameEl.className = "flex-1 w-full h-full p-1 sm:p-2 overflow-hidden flex flex-col bg-slate-950";
       } else {
         frameEl.className = "flex-1 w-full h-full p-3 md:p-6 overflow-y-auto flex items-center justify-center bg-slate-950";
