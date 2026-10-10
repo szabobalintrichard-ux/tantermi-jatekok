@@ -285,6 +285,12 @@
       <div class="flex items-center gap-3">
         <div id="activeAppIcon" class="w-9 h-9 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow"></div>
         <h2 id="activeAppTitle" class="text-lg md:text-xl font-bold text-white tracking-wide">Alkalmazás</h2>
+        <!-- Ez az új rész -->
+      <div class="ml-4 flex items-center gap-2 border-l border-slate-700 pl-4">
+        <i class="ph-bold ph-clock text-amber-400 text-lg"></i>
+        <span id="appTime" class="text-lg md:text-xl font-mono font-black text-white tracking-widest">--:--:--</span>
+      </div>
+      <!-- Új rész vége -->
       </div>
 
       <div class="flex items-center gap-2 md:gap-3">
@@ -1007,6 +1013,9 @@ Hanna</textarea>
       });
       const timeEl = document.getElementById('pecsTime');
       if (timeEl) timeEl.textContent = timeStr;
+      // Az új alkalmazás-óra frissítése:
+      const appTimeEl = document.getElementById('appTime');
+      if (appTimeEl) appTimeEl.textContent = timeStr;
 
       const dateStr = now.toLocaleDateString('hu-HU', {
         timeZone: 'Europe/Budapest',
