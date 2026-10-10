@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Színkeverő Műhely &bull; 12-es Színkör</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tone.js for tactile, playful sound effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Canvas Confetti for celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-sans-ui {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Tactile smartboard button styling */
+    .smart-btn {
+      touch-action: manipulation;
+      transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .smart-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+    .smart-btn:active {
+      transform: translateY(2px) scale(0.96);
+    }
+
+    /* Liquid wave effect in the mixing bowl */
+    @keyframes liquidWobble {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.02, 0.98) rotate(1deg); }
+      50% { transform: scale(0.99, 1.01) rotate(-1deg); }
+      75% { transform: scale(1.01, 0.99) rotate(0.5deg); }
+    }
+    .liquid-active {
+      animation: liquidWobble 2.8s ease-in-out infinite;
+    }
+
+    /* Droplet drop animation */
+    @keyframes dropIn {
+      0% { transform: translateY(-35px) scale(0.4); opacity: 0; }
+      60% { transform: translateY(4px) scale(1.15); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .animate-drop {
+      animation: dropIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* Target wedge highlight animation */
+    @keyframes targetGlow {
+      0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+        stroke-width: 4;
+      }
+      50% {
+        filter: drop-shadow(0 0 18px rgba(250, 204, 21, 1));
+        stroke-width: 6;
+      }
+    }
+    .wheel-target-pulse {
+      animation: targetGlow 1.3s ease-in-out infinite;
+    }
+
+    /* Slice click feedback */
+    .wheel-slice {
+      cursor: pointer;
+      transition: filter 0.15s ease, transform 0.15s ease;
+    }
+    .wheel-slice:hover {
+      filter: brightness(1.12);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-transparent">
+
+  <!-- Felső Navigációs Sáv (Az Amőba és az AfifEdu játékok stílusában) -->
+  <header class="w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800 py-2.5 px-3 sm:px-6 shadow-xl sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Cím és Kerekített Ikon -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-purple-600/25 flex-shrink-0">
+          <i class="ph-bold ph-palette"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-black tracking-wide text-white flex items-center gap-2">
+            <span>Színkeverő Műhely &bull; Digitális Tábla</span>
+          </h1>
+          <p class="text-[11px] sm:text-xs text-slate-400 font-sans-ui font-medium">
+            4. Osztályos Vizuális Kultúra &bull; Keverd ki a 9 színt a 3 alapszínből!
+          </p>
+        </div>
+      </div>
+
+      <!-- Kapszula (Pill) vezérlők és ikon gombok az Amőba felülethez hasonlóan -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        
+        <!-- Játékmód kapszula -->
+        <div class="bg-slate-950/80 p-1 rounded-2xl border border-slate-800 flex items-center gap-1 shadow-inner">
+          <span class="px-3 py-1 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5">
+            <i class="ph-bold ph-shuffle text-xs"></i>
+            <span>Véletlen célok</span>
+          </span>
+          <span class="text-[11px] font-bold text-slate-400 px-2.5 hidden md:inline font-sans-ui">
+            12-es Színkör
+          </span>
+        </div>
+
+        <!-- Haladási pontszámláló kapszula -->
+        <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-2xl border border-slate-800 shadow-inner">
+          <i class="ph-fill ph-trophy text-amber-400 text-base"></i>
+          <span class="text-xs font-bold text-slate-400">Kész:</span>
+          <span id="progressBadge" class="text-sm sm:text-base font-black font-mono-num text-emerald-400">0 / 9</span>
+        </div>
+
+        <!-- Vezérlőgombok (Kisokos, Hang, Teljes képernyő) -->
+        <div class="flex items-center gap-1.5">
+          <button id="guideBtn" class="smart-btn p-2 sm:px-3 sm:py-2 bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow" title="Színkeverési Kisokos" aria-label="Szabályok">
+            <i class="ph-bold ph-info text-lg text-amber-400"></i>
+            <span class="hidden sm:inline font-sans-ui">Kisokos</span>
+          </button>
+          
+          <button id="soundToggleBtn" class="smart-btn w-9 h-9 sm:w-10 sm:h-10 bg-slate-800/90 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-xl flex items-center justify-center shadow" title="Hang ki/be" aria-label="Hang beállítás">
+            <i id="soundIcon" class="ph-bold ph-speaker-high text-lg"></i>
+          </button>
+
+          <button id="fullscreenBtn" class="smart-btn p-2 sm:px-3 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow font-bold text-xs flex items-center gap-1.5 transition" title="Teljes képernyő" aria-label="Teljes képernyő">
+            <i id="fsIcon" class="ph-bold ph-corners-out text-base"></i>
+            <span class="hidden sm:inline font-sans-ui">Képernyő</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- FŐ TARTALOM: Keverőműhely (Bal) és a 12-osztatú Színkör (Jobb) -->
+  <main class="w-full max-w-7xl mx-auto flex-1 p-2 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+
+    <!-- BAL OLDAL: A Festőműhely és a Keverőtál (5 oszlop) -->
+    <section class="lg:col-span-5 flex flex-col gap-3.5">
+      
+      <!-- Cél szín kártya rejtett recepttel (Segítség kártya) -->
+      <div class="bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-4 shadow-xl relative overflow-hidden">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-[11px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/20">
+            Aktuális Feladat
+          </span>
+          <span id="targetCategoryBadge" class="text-[11px] font-bold text-slate-400 font-sans-ui">
+            Harmadlagos szín
+          </span>
+        </div>
+
+        <div class="flex items-start gap-3.5">
+          <!-- Cél szín mintája -->
+          <div id="targetColorPreview" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-4 border-white/20 shadow-xl flex items-center justify-center text-2xl flex-shrink-0 transition-all duration-300 mt-1" style="background-color: #FFA800;">
+            <span class="drop-shadow">🎯</span>
+          </div>
+
+          <div class="flex-1">
+            <div class="text-xs text-slate-400 font-bold">Keverd ki ezt a színt:</div>
+            <h2 id="targetColorName" class="text-xl sm:text-2xl font-black text-white tracking-wide leading-tight">
+              SÁRGÁS-NARANCS
+            </h2>
+
+            <!-- SEGÍTSÉG KÁRTYA: Alapból el van rejtve, csak rákattintva fedi fel a pontos receptet! -->
+            <div class="mt-2.5">
+              
+              <!-- Segítség gomb (ha még nincs felfedve) -->
+              <button id="helpToggleBtn" onclick="toggleHintCard()" class="smart-btn w-full px-3 py-2 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 hover:border-indigo-400/60 text-indigo-300 rounded-xl text-xs font-bold flex items-center justify-between transition-all">
+                <span class="flex items-center gap-1.5">
+                  <i class="ph-bold ph-lightbulb text-amber-400 text-base"></i>
+                  <span>Segítség (Recept felfedése)</span>
+                </span>
+                <span class="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-md font-mono text-indigo-200">Kattints ide ▾</span>
+              </button>
+
+              <!-- Felfedett segítség kártya (csak kattintásra látható!) -->
+              <div id="hintRevealBox" class="hidden p-3 rounded-2xl bg-amber-500/10 border-2 border-amber-400/40 text-amber-200 text-xs transition-all shadow-md">
+                <div class="flex items-center justify-between text-[11px] font-bold text-amber-300 mb-1.5 border-b border-amber-400/20 pb-1">
+                  <span class="flex items-center gap-1.5">
+                    <i class="ph-fill ph-sparkle text-amber-400"></i> Keverési arány (Recept):
+                  </span>
+                  <button onclick="toggleHintCard()" class="text-slate-400 hover:text-white text-[11px] font-bold px-2 py-0.5 rounded-md hover:bg-white/10 transition" title="Segítség elrejtése">
+                    ✕ Elrejt
+                  </button>
+                </div>
+                <!-- Itt jelenik meg a kért szöveg: pl. "1 csepp Piros + 2 csepp Kék" -->
+                <p id="targetHintText" class="font-black text-amber-100 text-sm tracking-wide py-0.5">
+                  2 csepp Sárga + 1 csepp Piros
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Keverőtál & Tubusok Doboza -->
+      <div class="bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl flex flex-col items-center">
+        
+        <!-- A fizikai keverőtál megjelenítése -->
+        <div class="relative w-44 h-44 sm:w-52 sm:h-52 mb-4 flex items-center justify-center">
+          <!-- Üvegtál pereme -->
+          <div class="absolute inset-0 rounded-full border-8 border-slate-800 shadow-2xl bg-slate-950/80"></div>
+          
+          <!-- A keverőtál belső folyadéka -->
+          <div id="liquidBowl" class="w-36 h-36 sm:w-44 sm:h-44 rounded-full border-4 border-white/30 shadow-inner flex flex-col items-center justify-center transition-colors duration-300 liquid-active relative overflow-hidden" style="background-color: #334155;">
+            
+            <!-- Fénycsillanás a folyadékon -->
+            <div class="absolute top-2 left-6 w-12 h-6 rounded-full bg-white/25 rotate-[-25deg] blur-[2px] pointer-events-none"></div>
+
+            <!-- Folyadék felirata -->
+            <span id="bowlStatusText" class="text-xs sm:text-sm font-black text-white drop-shadow-md text-center px-2 z-10">
+              Üres a tál<br><span class="text-[10px] font-sans-ui font-medium opacity-80">Adj hozzá festéket!</span>
+            </span>
+
+            <!-- Úszó cseppek ikonjai a tálban -->
+            <div id="floatingDropsContainer" class="flex gap-1 mt-1 z-10 flex-wrap justify-center px-2"></div>
+          </div>
+
+          <!-- Keverő ecset díszítés -->
+          <div class="absolute -top-2 right-4 text-3xl pointer-events-none drop-shadow-lg rotate-12">
+            🖌️
+          </div>
+        </div>
+
+        <!-- Hozzáadott cseppek összefoglalója -->
+        <div class="w-full flex items-center justify-between px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-800 text-xs font-bold mb-3 font-sans-ui">
+          <span class="text-slate-400">Tál tartalma:</span>
+          <div class="flex items-center gap-2" id="dropsSummary">
+            <span class="text-slate-500 font-mono-num font-bold">0 csepp</span>
+          </div>
+        </div>
+
+        <!-- 3 Nagy Alapszín Tubus (Sárga, Piros, Kék) -->
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3 w-full mb-3.5">
+          
+          <!-- SÁRGA TUBUS GOMB -->
+          <button onclick="addDrop('yellow')" class="smart-btn bg-gradient-to-b from-yellow-300 to-amber-500 hover:from-yellow-200 hover:to-amber-400 text-slate-950 font-black p-3 sm:p-4 rounded-2xl shadow-lg border-b-4 border-amber-700 flex flex-col items-center justify-center gap-1">
+            <span class="text-3xl drop-shadow">🟡</span>
+            <span class="text-xs sm:text-sm tracking-wide">SÁRGA</span>
+            <span class="text-[10px] font-sans-ui bg-black/15 px-2 py-0.5 rounded-full font-bold">+1 csepp</span>
+          </button>
+
+          <!-- PIROS TUBUS GOMB -->
+          <button onclick="addDrop('red')" class="smart-btn bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-black p-3 sm:p-4 rounded-2xl shadow-lg border-b-4 border-rose-900 flex flex-col items-center justify-center gap-1">
+            <span class="text-3xl drop-shadow">🔴</span>
+            <span class="text-xs sm:text-sm tracking-wide">PIROS</span>
+            <span class="text-[10px] font-sans-ui bg-black/20 px-2 py-0.5 rounded-full font-bold">+1 csepp</span>
+          </button>
+
+          <!-- KÉK TUBUS GOMB -->
+          <button onclick="addDrop('blue')" class="smart-btn bg-gradient-to-b from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white font-black p-3 sm:p-4 rounded-2xl shadow-lg border-b-4 border-blue-900 flex flex-col items-center justify-center gap-1">
+            <span class="text-3xl drop-shadow">🔵</span>
+            <span class="text-xs sm:text-sm tracking-wide">KÉK</span>
+            <span class="text-[10px] font-sans-ui bg-black/25 px-2 py-0.5 rounded-full font-bold">+1 csepp</span>
+          </button>
+
+        </div>
+
+        <!-- Műveleti gombok: Keverés és Kiöntés -->
+        <div class="grid grid-cols-2 gap-2.5 w-full">
+          <button onclick="checkMixture()" id="checkBtn" class="smart-btn py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg border-b-4 border-emerald-800 flex items-center justify-center gap-2">
+            <i class="ph-bold ph-sparkle text-xl"></i>
+            <span>Kikevertem!</span>
+          </button>
+
+          <button onclick="clearBowl()" class="smart-btn py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-sm sm:text-base rounded-2xl border-b-4 border-slate-950 flex items-center justify-center gap-2">
+            <i class="ph-bold ph-trash text-lg text-rose-400"></i>
+            <span>Tál kiöntése</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Pedagógiai Visszajelző kártya -->
+      <div id="feedbackBox" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 flex items-start gap-3 text-slate-300 text-xs sm:text-sm font-sans-ui leading-relaxed">
+        <div class="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-lg flex-shrink-0">
+          💡
+        </div>
+        <div id="feedbackText" class="font-medium">
+          <b>Tipp:</b> Próbáld meg először segítség nélkül kitalálni a színt! Ha nem vagy biztos benne, nyisd meg a <b>Segítség</b> kártyát!
+        </div>
+      </div>
+
+    </section>
+
+    <!-- JOBB OLDAL: A 12-osztatú Színkör (Tiszta, belső alakzatok nélküli gyűrű) -->
+    <section class="lg:col-span-7 flex flex-col items-center bg-slate-900/80 border-2 border-slate-800 rounded-3xl p-3 sm:p-5 shadow-2xl relative">
+      
+      <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black uppercase text-amber-300 bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30">
+            SZÍNKÖR (12 SZÍN)
+          </span>
+          <span class="text-xs text-slate-400 font-sans-ui font-semibold">
+            Érintsd meg a szeleteket a kiválasztáshoz!
+          </span>
+        </div>
+        <button onclick="resetAllGame()" class="text-xs font-bold text-slate-400 hover:text-rose-400 underline transition font-sans-ui">
+          Újrakezdés
+        </button>
+      </div>
+
+      <!-- A tiszta 12-osztatú Színkör SVG -->
+      <div class="relative w-full max-w-[500px] aspect-square flex items-center justify-center select-none p-1">
+        
+        <svg id="colorWheelSvg" viewBox="0 0 500 500" class="w-full h-full drop-shadow-2xl">
+          <defs>
+            <filter id="hubShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+
+          <!-- 1. KÜLSŐ KÖR: 12 Szelet -->
+          <g id="outerWheelRing">
+            <!-- A JavaScript dinamikusan rajzolja ki a 12 körcikket -->
+          </g>
+
+          <!-- 2. KÖZÉPSŐ TISZTA MAG -->
+          <g filter="url(#hubShadow)">
+            <circle cx="250" cy="250" r="118" fill="#0f172a" stroke="#ffffff" stroke-width="3" opacity="0.95"/>
+            <circle cx="250" cy="250" r="114" fill="#1e293b"/>
+
+            <!-- Dinamikusan frissülő központi cél-minta -->
+            <circle id="hubColorCircle" cx="250" cy="215" r="42" fill="#FFA800" stroke="#ffffff" stroke-width="3"/>
+            <text id="hubEmojiIcon" x="250" y="222" font-size="28" text-anchor="middle" pointer-events="none">🎯</text>
+
+            <!-- Középső feliratok (A recept itt sem látszik nyíltan, csak a segítő szöveg) -->
+            <text x="250" y="278" font-family="'Fredoka', cursive" font-size="12" font-weight="700" fill="#94a3b8" text-anchor="middle">
+              KIKERESENDŐ SZÍN:
+            </text>
+            <text id="hubColorName" x="250" y="302" font-family="'Fredoka', cursive" font-size="16" font-weight="800" fill="#fde047" text-anchor="middle">
+              SÁRGÁS-NARANCS
+            </text>
+            <text id="hubStatusHint" x="250" y="324" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" font-weight="600" fill="#94a3b8" text-anchor="middle">
+              Keverd ki a tálban! ✨
+            </text>
+          </g>
+        </svg>
+
+        <!-- Gratulációs overlay, ha mind a 9 színt kikeverték -->
+        <div id="wheelCompletedOverlay" class="absolute inset-0 bg-slate-950/92 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
+          <div class="text-6xl mb-2 animate-bounce">🏆</div>
+          <h3 class="text-3xl font-black text-amber-300">Mind a 9 szín kikeverve!</h3>
+          <p class="text-sm font-sans-ui text-slate-200 mt-2 max-w-sm">
+            Fantasztikusan ügyes vagy! Sikeresen kikeverted a színkör összes másodlagos és harmadlagos színét a 3 alapszínből!
+          </p>
+          <button onclick="resetAllGame()" class="smart-btn mt-6 px-7 py-3.5 bg-gradient-to-r from-amber-400 to-rose-500 hover:from-amber-300 hover:to-rose-400 text-slate-950 font-black text-sm rounded-2xl shadow-xl border-b-4 border-amber-700">
+            Új Játék Indítása 🔄
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Alsó segédlet -->
+      <div class="w-full flex items-center justify-center mt-2 pt-2 border-t border-slate-800 text-xs font-sans-ui text-slate-400 text-center font-medium">
+        Keverd ki a 3 alapszínből (Sárga, Piros, Kék) a 9 másodlagos és harmadlagos színt!
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- KISOKOS MODAL (4. osztályos tananyag) -->
+  <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-slate-900 border-2 border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="toggleGuideModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-xl">
+        <i class="ph-bold ph-x text-xl"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-2xl font-bold">
+          🎨
+        </div>
+        <div>
+          <h3 class="text-xl font-black text-white">Színkeverési Kisokos</h3>
+          <p class="text-xs text-slate-400 font-sans-ui">4. osztályos vizuális kultúra</p>
+        </div>
+      </div>
+
+      <div class="space-y-3.5 text-xs sm:text-sm font-sans-ui text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
+        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+          <h4 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5">
+            <span>🟡 🔴 🔵</span> 1. Alapszínek (Elsődlegesek):
+          </h4>
+          <p class="text-slate-300">
+            <b>Sárga, Piros, Kék.</b> Ezeket nem tudjuk más színekből kikeverni, belőlük keletkezik az összes többi szín!
+          </p>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+          <h4 class="font-bold text-orange-400 mb-1 flex items-center gap-1.5">
+            <span>🟠 🟢 🟣</span> 2. Másodlagos színek (1 : 1 arány):
+          </h4>
+          <p class="text-slate-300">
+            Két alapszín egyenlő arányú keveréke:<br>
+            &bull; Sárga + Piros = <b>Narancs</b><br>
+            &bull; Kék + Sárga = <b>Zöld</b><br>
+            &bull; Kék + Piros = <b>Lila</b>
+          </p>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+          <h4 class="font-bold text-rose-400 mb-1 flex items-center gap-1.5">
+            <span>🌸 🌿 🌅</span> 3. Harmadlagos színek (2 : 1 arány):
+          </h4>
+          <p class="text-slate-300">
+            Egy alapszínből több van benne (pl. <b>2 csepp Sárga + 1 csepp Piros = Sárgásnarancs</b>). A nevében az első tag mindig jelzi, melyik színből adtál hozzá többet!
+          </p>
+        </div>
+      </div>
+
+      <button onclick="toggleGuideModal()" class="smart-btn w-full mt-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-lg">
+        Értem, mehet a keverés! ✨
+      </button>
+    </div>
+  </div>
+
+  <script>
+    class ArtAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        try {
+          if (!this.ctx) {
+            const AudioClass = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioClass();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        } catch (e) {}
+      }
+      playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.2) {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+      playDrop(color) {
+        if (!this.enabled) return;
+        const freqs = { yellow: 659, red: 440, blue: 330 };
+        const f = freqs[color] || 440;
+        this.playTone(f, 'sine', 0.12, 0.25);
+        setTimeout(() => this.playTone(f * 1.5, 'triangle', 0.08, 0.15), 30);
+      }
+      playSlosh() {
+        if (!this.enabled) return;
+        this.playTone(220, 'triangle', 0.15, 0.2);
+        setTimeout(() => this.playTone(160, 'sine', 0.2, 0.2), 60);
+      }
+      playSuccess() {
+        if (!this.enabled) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => this.playTone(freq, 'triangle', 0.18, 0.25), idx * 75);
+        });
+      }
+      playFail() {
+        if (!this.enabled) return;
+        this.playTone(260, 'sawtooth', 0.12, 0.18);
+        setTimeout(() => this.playTone(190, 'sawtooth', 0.22, 0.2), 90);
+      }
+      playGrandWin() {
+        if (!this.enabled) return;
+        const fanfare = [440, 554, 659, 880, 1108];
+        fanfare.forEach((f, i) => {
+          setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.28), i * 110);
+        });
+      }
+    }
+
+    const sound = new ArtAudioEngine();
+
+    // A 12 szín pontos receptjei a Johannes Itten-féle színkör alapján
+    const WHEEL_COLORS = [
+      {
+        id: 'yellow',
+        name: 'SÁRGA',
+        category: 'Alapszín (Elsődleges)',
+        isPrimary: true,
+        hex: '#FFE600',
+        textColor: '#1e293b',
+        recipe: { yellow: 1, red: 0, blue: 0 },
+        desc: 'Alapszín: nem kell kikeverni!',
+        angle: 0
+      },
+      {
+        id: 'yellow_orange',
+        name: 'SÁRGÁS-NARANCS',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#FFA800',
+        textColor: '#1e293b',
+        recipe: { yellow: 2, red: 1, blue: 0 },
+        desc: '2 csepp Sárga + 1 csepp Piros',
+        angle: 30
+      },
+      {
+        id: 'orange',
+        name: 'NARANCS',
+        category: 'Másodlagos szín',
+        isPrimary: false,
+        hex: '#FF6E00',
+        textColor: '#1e293b',
+        recipe: { yellow: 1, red: 1, blue: 0 },
+        desc: '1 csepp Sárga + 1 csepp Piros',
+        angle: 60
+      },
+      {
+        id: 'red_orange',
+        name: 'PIROSAS-NARANCS',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#F24822',
+        textColor: '#ffffff',
+        recipe: { yellow: 1, red: 2, blue: 0 },
+        desc: '1 csepp Sárga + 2 csepp Piros',
+        angle: 90
+      },
+      {
+        id: 'red',
+        name: 'PIROS',
+        category: 'Alapszín (Elsődleges)',
+        isPrimary: true,
+        hex: '#E02020',
+        textColor: '#ffffff',
+        recipe: { yellow: 0, red: 1, blue: 0 },
+        desc: 'Alapszín: nem kell kikeverni!',
+        angle: 120
+      },
+      {
+        id: 'red_violet',
+        name: 'PIROSASLILA',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#9C1D54',
+        textColor: '#ffffff',
+        recipe: { yellow: 0, red: 2, blue: 1 },
+        desc: '2 csepp Piros + 1 csepp Kék',
+        angle: 150
+      },
+      {
+        id: 'violet',
+        name: 'LILA',
+        category: 'Másodlagos szín',
+        isPrimary: false,
+        hex: '#6A2C87',
+        textColor: '#ffffff',
+        recipe: { yellow: 0, red: 1, blue: 1 },
+        desc: '1 csepp Piros + 1 csepp Kék',
+        angle: 180
+      },
+      {
+        id: 'blue_violet',
+        name: 'KÉKESLILA',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#383896',
+        textColor: '#ffffff',
+        recipe: { yellow: 0, red: 1, blue: 2 },
+        desc: '1 csepp Piros + 2 csepp Kék',
+        angle: 210
+      },
+      {
+        id: 'blue',
+        name: 'KÉK',
+        category: 'Alapszín (Elsődleges)',
+        isPrimary: true,
+        hex: '#006BB6',
+        textColor: '#ffffff',
+        recipe: { yellow: 0, red: 0, blue: 1 },
+        desc: 'Alapszín: nem kell kikeverni!',
+        angle: 240
+      },
+      {
+        id: 'blue_green',
+        name: 'KÉKESZÖLD',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#0098A6',
+        textColor: '#ffffff',
+        recipe: { yellow: 1, red: 0, blue: 2 },
+        desc: '1 csepp Sárga + 2 csepp Kék',
+        angle: 270
+      },
+      {
+        id: 'green',
+        name: 'ZÖLD',
+        category: 'Másodlagos szín',
+        isPrimary: false,
+        hex: '#27AE60',
+        textColor: '#1e293b',
+        recipe: { yellow: 1, red: 0, blue: 1 },
+        desc: '1 csepp Sárga + 1 csepp Kék',
+        angle: 300
+      },
+      {
+        id: 'yellow_green',
+        name: 'SÁRGÁSZÖLD',
+        category: 'Harmadlagos szín',
+        isPrimary: false,
+        hex: '#8CC63F',
+        textColor: '#1e293b',
+        recipe: { yellow: 2, red: 0, blue: 1 },
+        desc: '2 csepp Sárga + 1 csepp Kék',
+        angle: 330
+      }
+    ];
+
+    let currentTargetIndex = 1;
+    let currentBowl = { yellow: 0, red: 0, blue: 0 };
+    let discoveredColors = new Set();
+    let isHintRevealed = false; // Követi, hogy a diák rákattintott-e a segítségre
+
+    function renderSvgWheel() {
+      const ringGroup = document.getElementById('outerWheelRing');
+      if (!ringGroup) return;
+      ringGroup.innerHTML = '';
+
+      const cx = 250;
+      const cy = 250;
+      const rInner = 124;
+      const rOuter = 242;
+
+      WHEEL_COLORS.forEach((color, idx) => {
+        const startDeg = -90 + (idx * 30) - 15;
+        const endDeg = startDeg + 30;
+
+        const startRad = (startDeg * Math.PI) / 180;
+        const endRad = (endDeg * Math.PI) / 180;
+
+        const x1Outer = cx + rOuter * Math.cos(startRad);
+        const y1Outer = cy + rOuter * Math.sin(startRad);
+        const x2Outer = cx + rOuter * Math.cos(endRad);
+        const y2Outer = cy + rOuter * Math.sin(endRad);
+
+        const x1Inner = cx + rInner * Math.cos(endRad);
+        const y1Inner = cy + rInner * Math.sin(endRad);
+        const x2Inner = cx + rInner * Math.cos(startRad);
+        const y2Inner = cy + rInner * Math.sin(startRad);
+
+        const pathData = `
+          M ${x1Outer} ${y1Outer}
+          A ${rOuter} ${rOuter} 0 0 1 ${x2Outer} ${y2Outer}
+          L ${x1Inner} ${y1Inner}
+          A ${rInner} ${rInner} 0 0 0 ${x2Inner} ${y2Inner}
+          Z
+        `;
+
+        const isDiscovered = discoveredColors.has(color.id);
+        const isTarget = (idx === currentTargetIndex);
+
+        const midDeg = startDeg + 15;
+        const midRad = (midDeg * Math.PI) / 180;
+        const rText = (rInner + rOuter) / 2;
+        const tx = cx + rText * Math.cos(midRad);
+        const ty = cy + rText * Math.sin(midRad);
+
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('d', pathData);
+        pathEl.setAttribute('id', `slice-${color.id}`);
+        pathEl.setAttribute('class', `wheel-slice ${isTarget ? 'wheel-target-pulse' : ''}`);
+        pathEl.setAttribute('fill', color.hex);
+        pathEl.setAttribute('stroke', isTarget ? '#fde047' : '#ffffff');
+        pathEl.setAttribute('stroke-width', isTarget ? '5' : '2.5');
+        pathEl.onclick = () => selectTargetByClick(idx);
+
+        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textEl.setAttribute('x', tx);
+        textEl.setAttribute('y', ty);
+        textEl.setAttribute('font-family', "'Fredoka', cursive");
+        textEl.setAttribute('font-size', '11.5');
+        textEl.setAttribute('font-weight', '800');
+        textEl.setAttribute('fill', color.textColor);
+        textEl.setAttribute('text-anchor', 'middle');
+        textEl.setAttribute('dominant-baseline', 'central');
+        textEl.setAttribute('pointer-events', 'none');
+
+        let rot = midDeg + 90;
+        if (rot > 90 && rot < 270) rot += 180;
+        textEl.setAttribute('transform', `rotate(${rot}, ${tx}, ${ty})`);
+        
+        if (color.isPrimary) {
+          textEl.textContent = `★ ${color.name}`;
+        } else if (isDiscovered) {
+          textEl.textContent = `✓ ${color.name}`;
+        } else {
+          textEl.textContent = color.name;
+        }
+
+        ringGroup.appendChild(pathEl);
+        ringGroup.appendChild(textEl);
+      });
+
+      updateHubDisplay();
+    }
+
+    function updateHubDisplay() {
+      const target = WHEEL_COLORS[currentTargetIndex];
+      const hubCircle = document.getElementById('hubColorCircle');
+      const hubName = document.getElementById('hubColorName');
+      const hubHint = document.getElementById('hubStatusHint');
+      const hubEmoji = document.getElementById('hubEmojiIcon');
+
+      if (hubCircle) hubCircle.setAttribute('fill', target.hex);
+      if (hubName) hubName.textContent = target.name;
+      
+      // Ha a diák felfedte a segítséget, a kör közepén is láthatóvá válik a recept
+      if (hubHint) {
+        hubHint.textContent = isHintRevealed ? target.desc : 'Keverd ki a tálban! ✨';
+      }
+      if (hubEmoji) {
+        hubEmoji.textContent = discoveredColors.has(target.id) ? '⭐' : '🎯';
+      }
+    }
+
+    // Segítség kártya felnyitása és becsukása
+    function toggleHintCard() {
+      isHintRevealed = !isHintRevealed;
+      const hintBox = document.getElementById('hintRevealBox');
+      const helpBtn = document.getElementById('helpToggleBtn');
+
+      if (isHintRevealed) {
+        sound.playTone(520, 'sine', 0.1, 0.15);
+        if (hintBox) hintBox.classList.remove('hidden');
+        if (helpBtn) helpBtn.classList.add('hidden');
+      } else {
+        if (hintBox) hintBox.classList.add('hidden');
+        if (helpBtn) helpBtn.classList.remove('hidden');
+      }
+
+      updateHubDisplay();
+    }
+
+    function resetHintState() {
+      isHintRevealed = false;
+      const hintBox = document.getElementById('hintRevealBox');
+      const helpBtn = document.getElementById('helpToggleBtn');
+      if (hintBox) hintBox.classList.add('hidden');
+      if (helpBtn) helpBtn.classList.remove('hidden');
+    }
+
+    function addDrop(color) {
+      sound.playDrop(color);
+      currentBowl[color]++;
+      updateBowlDisplay();
+    }
+
+    function clearBowl() {
+      sound.playSlosh();
+      currentBowl = { yellow: 0, red: 0, blue: 0 };
+      updateBowlDisplay();
+      setFeedback('A keverőtálat kiürítetted. Válassz festéket a tubusokból! 🧹', 'neutral');
+    }
+
+    // RYB színkeverés szimuláció a keverőtálhoz
+    function computeCurrentBowlHex() {
+      const total = currentBowl.yellow + currentBowl.red + currentBowl.blue;
+      if (total === 0) return '#334155';
+
+      const yRatio = currentBowl.yellow / total;
+      const rRatio = currentBowl.red / total;
+      const bRatio = currentBowl.blue / total;
+
+      if (currentBowl.yellow > 0 && currentBowl.red > 0 && currentBowl.blue > 0) {
+        return '#584234';
+      }
+
+      // Sárga + Piros (Narancsok)
+      if (currentBowl.blue === 0) {
+        if (currentBowl.red === 0) return '#FFE600';
+        if (currentBowl.yellow === 0) return '#E02020';
+        if (yRatio > 0.6) return '#FFA800';
+        if (rRatio > 0.6) return '#F24822';
+        return '#FF6E00';
+      }
+
+      // Piros + Kék (Lilák)
+      if (currentBowl.yellow === 0) {
+        if (currentBowl.blue === 0) return '#E02020';
+        if (currentBowl.red === 0) return '#006BB6';
+        if (rRatio > 0.6) return '#9C1D54';
+        if (bRatio > 0.6) return '#383896';
+        return '#6A2C87';
+      }
+
+      // Sárga + Kék (Zöldek)
+      if (currentBowl.red === 0) {
+        if (currentBowl.blue === 0) return '#FFE600';
+        if (currentBowl.yellow === 0) return '#006BB6';
+        if (yRatio > 0.6) return '#8CC63F';
+        if (bRatio > 0.6) return '#0098A6';
+        return '#27AE60';
+      }
+
+      return '#475569';
+    }
+
+    function updateBowlDisplay() {
+      const bowlEl = document.getElementById('liquidBowl');
+      const statusText = document.getElementById('bowlStatusText');
+      const summaryEl = document.getElementById('dropsSummary');
+      const dropsContainer = document.getElementById('floatingDropsContainer');
+
+      const total = currentBowl.yellow + currentBowl.red + currentBowl.blue;
+      const currentHex = computeCurrentBowlHex();
+
+      if (bowlEl) bowlEl.style.backgroundColor = currentHex;
+
+      if (dropsContainer) {
+        dropsContainer.innerHTML = '';
+        for (let i = 0; i < currentBowl.yellow; i++) {
+          dropsContainer.innerHTML += '<span class="text-sm animate-drop drop-shadow">🟡</span>';
+        }
+        for (let i = 0; i < currentBowl.red; i++) {
+          dropsContainer.innerHTML += '<span class="text-sm animate-drop drop-shadow">🔴</span>';
+        }
+        for (let i = 0; i < currentBowl.blue; i++) {
+          dropsContainer.innerHTML += '<span class="text-sm animate-drop drop-shadow">🔵</span>';
+        }
+      }
+
+      if (total === 0) {
+        statusText.innerHTML = 'Üres a tál<br><span class="text-[10px] font-sans-ui font-medium opacity-80">Adj hozzá festéket!</span>';
+        summaryEl.innerHTML = '<span class="text-slate-500 font-mono-num font-bold">0 csepp</span>';
+      } else {
+        statusText.innerHTML = `<span class="text-base sm:text-lg font-black">${total} csepp</span><br><span class="text-[11px] font-sans-ui font-bold uppercase tracking-wider">Keverék</span>`;
+        
+        let sumStr = '';
+        if (currentBowl.yellow > 0) sumStr += `<span class="text-amber-300 font-bold">🟡 ${currentBowl.yellow}</span> `;
+        if (currentBowl.red > 0) sumStr += `<span class="text-rose-400 font-bold">🔴 ${currentBowl.red}</span> `;
+        if (currentBowl.blue > 0) sumStr += `<span class="text-sky-400 font-bold">🔵 ${currentBowl.blue}</span> `;
+        summaryEl.innerHTML = sumStr;
+      }
+    }
+
+    function checkMixture() {
+      const total = currentBowl.yellow + currentBowl.red + currentBowl.blue;
+      if (total === 0) {
+        sound.playFail();
+        setFeedback('Még nem tettél festéket a tálba! Nyomd meg a sárga, piros vagy kék tubust! 🎨', 'warn');
+        return;
+      }
+
+      const target = WHEEL_COLORS[currentTargetIndex];
+      const req = target.recipe;
+
+      const isMatch = checkRecipeRatio(currentBowl, req);
+
+      if (isMatch) {
+        sound.playSuccess();
+        discoveredColors.add(target.id);
+
+        try {
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 90,
+              spread: 75,
+              origin: { y: 0.6 },
+              colors: [target.hex, '#ffffff', '#fde047']
+            });
+          }
+        } catch (e) {}
+
+        setFeedback(`🎉 <b>Bravó! Sikeresen kikeverted a(z) ${target.name} színt!</b> (${target.desc})`, 'success');
+        updateProgress();
+        renderSvgWheel();
+
+        const mixableColors = WHEEL_COLORS.filter(c => !c.isPrimary);
+        const remainingMixable = mixableColors.filter(c => !discoveredColors.has(c.id));
+
+        if (remainingMixable.length === 0) {
+          setTimeout(showGameComplete, 500);
+          return;
+        }
+
+        setTimeout(pickRandomTarget, 1200);
+
+      } else {
+        sound.playFail();
+        giveSmartHint(currentBowl, target);
+      }
+    }
+
+    function checkRecipeRatio(current, target) {
+      if (target.yellow === 0 && current.yellow > 0) return false;
+      if (target.red === 0 && current.red > 0) return false;
+      if (target.blue === 0 && current.blue > 0) return false;
+
+      if (target.yellow > 0 && current.yellow === 0) return false;
+      if (target.red > 0 && current.red === 0) return false;
+      if (target.blue > 0 && current.blue === 0) return false;
+
+      // Másodlagos színek (1 : 1 arány)
+      if (target.yellow === 1 && target.red === 1 && target.blue === 0) return current.yellow === current.red;
+      if (target.yellow === 0 && target.red === 1 && target.blue === 1) return current.red === current.blue;
+      if (target.yellow === 1 && target.red === 0 && target.blue === 1) return current.yellow === current.blue;
+
+      // Harmadlagos színek (2 : 1 arány)
+      if (target.yellow === 2 && target.red === 1) return Math.abs((current.yellow / current.red) - 2) < 0.25;
+      if (target.yellow === 1 && target.red === 2) return Math.abs((current.red / current.yellow) - 2) < 0.25;
+
+      if (target.red === 2 && target.blue === 1) return Math.abs((current.red / current.blue) - 2) < 0.25;
+      if (target.red === 1 && target.blue === 2) return Math.abs((current.blue / current.red) - 2) < 0.25;
+
+      if (target.yellow === 1 && target.blue === 2) return Math.abs((current.blue / current.yellow) - 2) < 0.25;
+      if (target.yellow === 2 && target.blue === 1) return Math.abs((current.yellow / current.blue) - 2) < 0.25;
+
+      return false;
+    }
+
+    function giveSmartHint(curr, target) {
+      if (curr.yellow > 0 && curr.red > 0 && curr.blue > 0) {
+        setFeedback('Mindhárom alapszínt beletetted, így szürkésbarna szín keletkezett! Öntsd ki a tálat, és csak 2 színből keverj!', 'error');
+        return;
+      }
+
+      if (target.recipe.blue === 0 && curr.blue > 0) {
+        setFeedback(`A(z) <b>${target.name}</b> színhez nem kell kék! Csak sárga és piros szükséges.`, 'error');
+        return;
+      }
+      if (target.recipe.yellow === 0 && curr.yellow > 0) {
+        setFeedback(`A(z) <b>${target.name}</b> színhez nem kell sárga! Csak piros és kék szükséges.`, 'error');
+        return;
+      }
+      if (target.recipe.red === 0 && curr.red > 0) {
+        setFeedback(`A(z) <b>${target.name}</b> színhez nem kell piros! Csak sárga és kék szükséges.`, 'error');
+        return;
+      }
+
+      if (target.recipe.yellow > target.recipe.red && curr.yellow <= curr.red) {
+        setFeedback(`Majdnem jó! A sárgás-narancshoz <b>több sárgára</b> van szükség. Nyiss segítséget, ha elakadtál!`, 'warn');
+        return;
+      }
+      if (target.recipe.red > target.recipe.yellow && curr.red <= curr.yellow) {
+        setFeedback(`Majdnem jó! A pirosas-narancshoz <b>több pirosra</b> van szükség. Nyiss segítséget, ha elakadtál!`, 'warn');
+        return;
+      }
+      if (target.recipe.blue > target.recipe.red && curr.blue <= curr.red) {
+        setFeedback(`Majdnem jó! A kékeslilához <b>több kékre</b> van szükség, mint pirosra!`, 'warn');
+        return;
+      }
+      if (target.recipe.red > target.recipe.blue && curr.red <= curr.blue) {
+        setFeedback(`Majdnem jó! A pirosaslilához <b>több pirosra</b> van szükség, mint kékre!`, 'warn');
+        return;
+      }
+
+      setFeedback(`Nem egészen az igazi arány. Próbáld újra, vagy kattints a <b>Segítség</b> gombra a receptért!`, 'warn');
+    }
+
+    function setFeedback(htmlMsg, type = 'neutral') {
+      const box = document.getElementById('feedbackBox');
+      const text = document.getElementById('feedbackText');
+      if (!text || !box) return;
+
+      text.innerHTML = htmlMsg;
+
+      box.className = "rounded-2xl p-3.5 flex items-start gap-3 text-xs sm:text-sm font-sans-ui leading-relaxed transition-all ";
+      if (type === 'success') {
+        box.className += "bg-emerald-950/70 border border-emerald-500/50 text-emerald-200";
+      } else if (type === 'error') {
+        box.className += "bg-rose-950/70 border border-rose-500/50 text-rose-200";
+      } else if (type === 'warn') {
+        box.className += "bg-amber-950/70 border border-amber-500/50 text-amber-200";
+      } else {
+        box.className += "bg-slate-900/80 border border-slate-800 text-slate-300";
+      }
+    }
+
+    function setTarget(index) {
+      currentTargetIndex = index;
+      const target = WHEEL_COLORS[index];
+
+      const nameEl = document.getElementById('targetColorName');
+      const catEl = document.getElementById('targetCategoryBadge');
+      const previewEl = document.getElementById('targetColorPreview');
+      const hintEl = document.getElementById('targetHintText');
+
+      if (nameEl) nameEl.textContent = target.name;
+      if (catEl) catEl.textContent = target.category;
+      if (previewEl) previewEl.style.backgroundColor = target.hex;
+      if (hintEl) hintEl.textContent = target.desc;
+
+      // Minden új célpontnál alaphelyzetbe állítjuk a rejtett segítség kártyát
+      resetHintState();
+      clearBowl();
+      renderSvgWheel();
+    }
+
+    function selectTargetByClick(index) {
+      const selected = WHEEL_COLORS[index];
+      
+      // Alapszínek kizárása magyarázattal
+      if (selected.isPrimary) {
+        sound.playTone(350, 'triangle', 0.15, 0.2);
+        setFeedback(`A(z) <b>${selected.name}</b> egy <b>alapszín</b>! Nem lehet más színekből kikeverni, ebből keverjük a többit a tubusok segítségével. Válassz egy másik szeletet!`, 'warn');
+        return;
+      }
+
+      sound.playDrop('yellow');
+      setTarget(index);
+    }
+
+    function pickRandomTarget() {
+      const candidates = [];
+      WHEEL_COLORS.forEach((color, idx) => {
+        if (!color.isPrimary && !discoveredColors.has(color.id)) {
+          candidates.push(idx);
+        }
+      });
+
+      if (candidates.length === 0) {
+        showGameComplete();
+        return;
+      }
+
+      const randomIdx = candidates[Math.floor(Math.random() * candidates.length)];
+      setTarget(randomIdx);
+    }
+
+    function updateProgress() {
+      const badge = document.getElementById('progressBadge');
+      if (badge) {
+        const mixableTotal = WHEEL_COLORS.filter(c => !c.isPrimary).length;
+        const discoveredMixable = WHEEL_COLORS.filter(c => !c.isPrimary && discoveredColors.has(c.id)).length;
+        badge.textContent = `${discoveredMixable} / ${mixableTotal}`;
+      }
+    }
+
+    function showGameComplete() {
+      sound.playGrandWin();
+      try {
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 160, spread: 110, origin: { y: 0.5 } });
+        }
+      } catch (e) {}
+
+      const overlay = document.getElementById('wheelCompletedOverlay');
+      if (overlay) {
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100');
+      }
+    }
+
+    function resetAllGame() {
+      discoveredColors.clear();
+      updateProgress();
+      pickRandomTarget();
+      const overlay = document.getElementById('wheelCompletedOverlay');
+      if (overlay) {
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        overlay.classList.remove('opacity-100');
+      }
+      setFeedback('Új játék indult! Nézd meg a feladatot, és keverd ki a célszínt a tálban!', 'neutral');
+    }
+
+    function toggleGuideModal() {
+      const modal = document.getElementById('guideModal');
+      if (!modal) return;
+      modal.classList.toggle('opacity-0');
+      modal.classList.toggle('pointer-events-none');
+    }
+
+    function toggleSound() {
+      sound.enabled = !sound.enabled;
+      const icon = document.getElementById('soundIcon');
+      if (icon) {
+        icon.className = sound.enabled ? 'ph-bold ph-speaker-high text-lg' : 'ph-bold ph-speaker-slash text-lg';
+      }
+    }
+
+    function toggleFullScreen() {
+      const fsIcon = document.getElementById('fsIcon');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        if (fsIcon) fsIcon.className = 'ph-bold ph-corners-in text-base';
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        if (fsIcon) fsIcon.className = 'ph-bold ph-corners-out text-base';
+      }
+    }
+
+    window.onload = () => {
+      document.getElementById('guideBtn').addEventListener('click', toggleGuideModal);
+      document.getElementById('soundToggleBtn').addEventListener('click', toggleSound);
+      document.getElementById('fullscreenBtn').addEventListener('click', toggleFullScreen);
+
+      pickRandomTarget();
+      updateBowlDisplay();
+    };
+  </script>
+</body>
+</html>
