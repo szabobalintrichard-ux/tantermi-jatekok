@@ -93,52 +93,26 @@
 
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-transparent">
 
-  <!-- Felső Navigációs Sáv (Az Amőba és az AfifEdu játékok stílusában) -->
-  <header class="w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800 py-2.5 px-3 sm:px-6 shadow-xl sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      
-      <!-- Cím és Kerekített Ikon -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-purple-600/25 flex-shrink-0">
-          <i class="ph-bold ph-palette"></i>
-        </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-black tracking-wide text-white flex items-center gap-2">
-            <span>Színkeverő Műhely &bull; Digitális Tábla</span>
-          </h1>
-          <p class="text-[11px] sm:text-xs text-slate-400 font-sans-ui font-medium">
-            4. Osztályos Vizuális Kultúra &bull; Keverd ki a 9 színt a 3 alapszínből!
-          </p>
-        </div>
+<!-- Felső Navigációs Sáv - Kompakt változat -->
+  <header class="w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800 py-2 px-4 shadow-xl sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex items-center justify-end gap-3">
+      <!-- Haladási pontszámláló kapszula -->
+      <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-2xl border border-slate-800 shadow-inner">
+        <i class="ph-fill ph-trophy text-amber-400 text-base"></i>
+        <span class="text-xs font-bold text-slate-400">Kész:</span>
+        <span id="progressBadge" class="text-sm sm:text-base font-black font-mono-num text-emerald-400">0 / 9</span>
       </div>
 
-      <!-- Kapszula (Pill) vezérlők és ikon gombok az Amőba felülethez hasonlóan -->
-      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-
-        <!-- Haladási pontszámláló kapszula -->
-        <div class="flex items-center gap-2 bg-slate-950/80 px-3.5 py-1.5 rounded-2xl border border-slate-800 shadow-inner">
-          <i class="ph-fill ph-trophy text-amber-400 text-base"></i>
-          <span class="text-xs font-bold text-slate-400">Kész:</span>
-          <span id="progressBadge" class="text-sm sm:text-base font-black font-mono-num text-emerald-400">0 / 9</span>
-        </div>
-
-        <!-- Vezérlőgombok (Kisokos, Hang, Teljes képernyő) -->
-        <div class="flex items-center gap-1.5">
-          <button id="guideBtn" class="smart-btn p-2 sm:px-3 sm:py-2 bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow" title="Színkeverési Kisokos" aria-label="Szabályok">
-            <i class="ph-bold ph-info text-lg text-amber-400"></i>
-            <span class="hidden sm:inline font-sans-ui">Kisokos</span>
-          </button>
-          
-          <button id="soundToggleBtn" class="smart-btn w-9 h-9 sm:w-10 sm:h-10 bg-slate-800/90 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-xl flex items-center justify-center shadow" title="Hang ki/be" aria-label="Hang beállítás">
-            <i id="soundIcon" class="ph-bold ph-speaker-high text-lg"></i>
-          </button>
-
-          <button id="fullscreenBtn" class="smart-btn p-2 sm:px-3 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow font-bold text-xs flex items-center gap-1.5 transition" title="Teljes képernyő" aria-label="Teljes képernyő">
-            <i id="fsIcon" class="ph-bold ph-corners-out text-base"></i>
-            <span class="hidden sm:inline font-sans-ui">Képernyő</span>
-          </button>
-        </div>
-
+      <!-- Vezérlőgombok (Kisokos és Hang) -->
+      <div class="flex items-center gap-2">
+        <button id="guideBtn" class="smart-btn p-2 sm:px-3 sm:py-2 bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow" title="Színkeverési Kisokos" aria-label="Szabályok">
+          <i class="ph-bold ph-info text-lg text-amber-400"></i>
+          <span class="hidden sm:inline font-sans-ui">Kisokos</span>
+        </button>
+        
+        <button id="soundToggleBtn" class="smart-btn w-9 h-9 sm:w-10 sm:h-10 bg-slate-800/90 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-xl flex items-center justify-center shadow" title="Hang ki/be" aria-label="Hang beállítás">
+          <i id="soundIcon" class="ph-bold ph-speaker-high text-lg"></i>
+        </button>
       </div>
     </div>
   </header>
@@ -1109,8 +1083,6 @@
     window.onload = () => {
       document.getElementById('guideBtn').addEventListener('click', toggleGuideModal);
       document.getElementById('soundToggleBtn').addEventListener('click', toggleSound);
-      document.getElementById('fullscreenBtn').addEventListener('click', toggleFullScreen);
-
       pickRandomTarget();
       updateBowlDisplay();
     };
