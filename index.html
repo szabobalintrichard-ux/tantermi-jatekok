@@ -330,9 +330,15 @@
     <div id="view-szinkevero" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
       <iframe src="szinkevero.html" class="w-full h-full border-0"></iframe>
     </div>
+    
     <!-- === RUBIK KOCKA === -->
     <div id="view-rubic" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
       <iframe src="rubic.html" class="w-full h-full border-0"></iframe>
+    </div>
+    
+    <!-- === SCRABBLE === -->
+    <div id="view-scrabble" class="w-full h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-2xl relative select-none">   
+      <iframe src="scrabble.html" class="w-full h-full border-0"></iframe>
     </div>
     
     <!-- === 1. RAJZTÁBLA (PAINT) === -->
@@ -3337,6 +3343,14 @@ resetScreensaverTimer();
         viewId: 'view-szinkevero'
       },
       {
+        id: 'scrabble',
+        title: 'Scrabble',
+        icon: 'ph-text-aa',
+        color: 'from-amber-600 via-orange-600 to-red-600',
+        textColor: 'text-white',
+        viewId: 'view-scrabble'
+      },
+      {
     id: 'amoba',
     title: 'Eltűnő Amőba',
     icon: 'ph-grid-four',
@@ -3472,7 +3486,7 @@ resetScreensaverTimer();
       iconEl.className = `w-9 h-9 rounded-xl flex items-center justify-center text-xl font-bold bg-gradient-to-tr ${app.color} shadow`;
       iconEl.innerHTML = app.icon.startsWith('ph-') ? `<i class="ph-bold ${app.icon}"></i>` : app.icon;
 
-if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba' || app.id === 'rubic' || app.id === 'szinkevero' || app.id === 'game_2048') {
+if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba' || app.id === 'rubic' || app.id === 'szinkevero' || app.id === 'game_2048' || app.id === 'scrabble') {
         frameEl.className = "flex-1 w-full h-full p-1 sm:p-2 overflow-hidden flex flex-col bg-slate-950";
       } else {
         frameEl.className = "flex-1 w-full h-full p-3 md:p-6 overflow-y-auto flex items-center justify-center bg-slate-950";
