@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Digitális Tábla 2048 - 1 Játékos & Párbaj Mód</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&family=Nunito:wght@700;800;900&display=swap');
+    
+    body {
+      font-family: 'Fredoka', 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .friv-bg {
+      background-color: #0b1120;
+      background-image: 
+        radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.08) 2%, transparent 0%),
+        radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.04) 3%, transparent 0%);
+      background-size: 80px 80px;
+    }
+
+    /* Dinamikus tábla térközök */
+    .board-wrap {
+      --b-pad: 12px;
+      --b-gap: 10px;
+    }
+    .duel-board-wrap {
+      --b-pad: 10px;
+      --b-gap: 8px;
+    }
+
+    /* Csúszó animációs kocka konténer */
+    .tile-node {
+      position: absolute;
+      width: calc((100% - (3 * var(--b-gap))) / 4);
+      height: calc((100% - (3 * var(--b-gap))) / 4);
+      transition: transform 115ms cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .tile-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      user-select: none;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Új kocka születési animáció */
+    @keyframes popAppear {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.1); opacity: 0.9; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-new {
+      animation: popAppear 140ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* Összeolvadási (merge) ruganyos animáció */
+    @keyframes popMerge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.22); }
+      100% { transform: scale(1); }
+    }
+    .pop-merge {
+      animation: popMerge 150ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    /* 2048 Csempe színek */
+    .tile-2 { background-color: #eee4da; color: #776e65; }
+    .tile-4 { background-color: #ede0c8; color: #776e65; }
+    .tile-8 { background-color: #f2b179; color: #f9f6f2; }
+    .tile-16 { background-color: #f59563; color: #f9f6f2; }
+    .tile-32 { background-color: #f67c5f; color: #f9f6f2; }
+    .tile-64 { background-color: #e95938; color: #f9f6f2; }
+    .tile-128 { background-color: #ecc95f; color: #f9f6f2; box-shadow: 0 0 12px rgba(236, 201, 95, 0.4); }
+    .tile-256 { background-color: #ecc44d; color: #f9f6f2; box-shadow: 0 0 16px rgba(236, 196, 77, 0.5); }
+    .tile-512 { background-color: #ebbe3b; color: #f9f6f2; box-shadow: 0 0 20px rgba(235, 190, 59, 0.6); }
+    .tile-1024 { background-color: #10b981; color: #ffffff; box-shadow: 0 0 22px rgba(16, 185, 129, 0.6); }
+    .tile-2048 { background-color: #6366f1; color: #fbbf24; box-shadow: 0 0 25px rgba(99, 102, 241, 0.8); border: 3px solid #fbbf24; animation: pulseWin 1.5s infinite; }
+
+    @keyframes pulseWin {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .tap-btn {
+      transition: transform 0.08s ease, filter 0.08s ease;
+    }
+    .tap-btn:active {
+      transform: scale(0.93) translateY(2px);
+      filter: brightness(0.92);
+    }
+  </style>
+</head>
+<body class="friv-bg text-slate-100 min-h-screen flex flex-col justify-start overflow-x-hidden">
+
+  <!-- FEJLÉC -->
+  <header class="w-full bg-slate-900/95 backdrop-blur-md border-b-2 border-slate-800 py-2.5 px-4 md:px-8 shadow-xl flex-shrink-0 z-30">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- LOGÓ -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 p-0.5 shadow-lg shadow-amber-500/25 border-2 border-amber-200 flex items-center justify-center transform -rotate-3">
+          <span class="text-white font-black text-xl tracking-tighter drop-shadow-md font-mono">2048</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg md:text-xl font-black text-white tracking-wide">Digitális Tábla</h1>
+            <span id="currentModeBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400/20 text-amber-300 border border-amber-400/30">1 Játékos</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Érintőgombokkal & billentyűzettel</p>
+        </div>
+      </div>
+
+      <!-- MÓDVÁLTÓ GOMBOK -->
+      <div class="bg-slate-950/80 p-1 rounded-2xl border border-slate-800 flex items-center gap-1 shadow-inner">
+        <button id="modeBtn1P" onclick="switchGameMode(1)" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-indigo-600 text-white shadow-md flex items-center gap-1.5">
+          <i class="ph-bold ph-user"></i> 1 Játékos
+        </button>
+        <button id="modeBtn2P" onclick="switchGameMode(2)" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i class="ph-bold ph-users-three"></i> 2 Játékos Párbaj
+        </button>
+      </div>
+
+      <!-- HANG ÉS ÚJRA GOMBOK -->
+      <div class="flex items-center gap-2">
+        <button id="soundToggleBtn" onclick="toggleSound()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-400 border border-slate-700 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow transition">
+          <i id="soundIcon" class="ph-bold ph-speaker-high text-base"></i>
+          <span id="soundText">Hang: BE</span>
+        </button>
+        <button onclick="resetCurrentViewGames()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white border border-rose-500 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow transition">
+          <i class="ph-bold ph-arrow-counter-clockwise text-base"></i> Újra
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- FŐ JÁTÉKTERÜLET -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-6 flex flex-col justify-start items-center overflow-y-auto">
+
+    <!-- ==================== 1. JÁTÉKOS NÉZET ==================== -->
+    <div id="view1Player" class="w-full flex flex-col xl:flex-row items-center xl:items-start justify-between gap-6">
+      
+      <!-- Bal oldali távtartó (középre igazításhoz) -->
+      <div class="hidden xl:block w-64 flex-shrink-0 pointer-events-none"></div>
+
+      <!-- Középső egység: Nyilak balra + 2048 tábla mellette -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-6 flex-shrink-0">
+        
+        <!-- VEZÉRLŐNYILAK -->
+        <div class="bg-slate-900/95 p-4 rounded-3xl border-2 border-slate-800 shadow-2xl flex flex-col items-center w-52 sm:w-56 flex-shrink-0">
+          <span class="text-xs font-black uppercase tracking-wider text-amber-400 mb-2.5 flex items-center gap-1.5">
+            <i class="ph-bold ph-hand-pointing text-base"></i> Tábla Vezérlő
+          </span>
+          <div class="grid grid-cols-3 gap-2 w-full">
+            <div></div>
+            <button onclick="movePlayer(1, 'up')" class="tap-btn h-15 sm:h-16 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-3xl font-black shadow-lg border-b-4 border-amber-700 flex items-center justify-center">⬆️</button>
+            <div></div>
+            <button onclick="movePlayer(1, 'left')" class="tap-btn h-15 sm:h-16 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-3xl font-black shadow-lg border-b-4 border-amber-700 flex items-center justify-center">⬅️</button>
+            <button onclick="movePlayer(1, 'down')" class="tap-btn h-15 sm:h-16 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-3xl font-black shadow-lg border-b-4 border-amber-700 flex items-center justify-center">⬇️</button>
+            <button onclick="movePlayer(1, 'right')" class="tap-btn h-15 sm:h-16 rounded-2xl bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-3xl font-black shadow-lg border-b-4 border-amber-700 flex items-center justify-center">➡️</button>
+          </div>
+          <span class="text-[10px] text-slate-500 mt-2.5 font-semibold text-center">Érintsd meg a gombokat</span>
+        </div>
+
+        <!-- JÁTÉKTÉR -->
+        <div class="flex flex-col items-center justify-center w-full max-w-[360px] flex-shrink-0">
+          <div class="w-full flex items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <div class="bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-2xl text-center shadow">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">Pont</span>
+                <span id="p1Score" class="text-xl font-black text-amber-400 font-mono">0</span>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-2xl text-center shadow">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">Rekord</span>
+                <span id="p1Best" class="text-xl font-black text-emerald-400 font-mono">0</span>
+              </div>
+            </div>
+            <button onclick="resetGame(1)" class="tap-btn px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow border-b-2 border-indigo-800 flex items-center gap-1.5">
+              <i class="ph-bold ph-arrows-clockwise text-base"></i> Új játék
+            </button>
+          </div>
+
+          <!-- 4x4 RÁCS ANIMÁLT CSÚSZÁSSAL -->
+          <div id="p1Board" class="board-wrap w-full aspect-square bg-slate-900/90 p-3 rounded-3xl relative border-4 border-slate-800 shadow-2xl touch-none">
+            <!-- Háttér üres rács -->
+            <div class="grid grid-cols-4 grid-rows-4 gap-2.5 w-full h-full pointer-events-none">
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+              <div class="w-full h-full rounded-2xl bg-slate-800/40"></div>
+            </div>
+            <!-- Animált Kockák Konténere -->
+            <div id="p1TileContainer" class="absolute inset-3 pointer-events-none"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- JOBB OLDALI RANGSOR -->
+      <div class="bg-slate-900/95 p-4 rounded-3xl border-2 border-slate-800 shadow-2xl flex flex-col w-full max-w-[270px] xl:w-64 flex-shrink-0">
+        <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-800">
+          <span class="text-xs font-black uppercase tracking-wider text-yellow-400 flex items-center gap-1.5">
+            🏆 Rangsor (Top 5)
+          </span>
+          <button onclick="clearLeaderboard()" class="text-[10px] text-rose-400 hover:underline">Törlés</button>
+        </div>
+        <div id="leaderboardList" class="flex flex-col gap-1.5 min-h-[145px] text-xs font-bold"></div>
+        <button onclick="openNameModal(1, false)" class="mt-3 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-300 text-xs font-bold rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 transition">
+          ✍️ Név rögzítése most
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==================== 2. JÁTÉKOS PÁRBAJ NÉZET ==================== -->
+    <div id="view2Player" class="w-full hidden grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+      
+      <!-- 1. JÁTÉKOS: KÉK -->
+      <div class="bg-slate-900/80 border-4 border-blue-500/60 rounded-3xl p-4 flex flex-col items-center justify-between shadow-2xl">
+        <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-blue-500/30">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+            <span class="font-black text-sm text-blue-300 uppercase tracking-wider">1. Játékos (Kék)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-400">Pont:</span>
+            <span id="duelScore1" class="font-mono text-lg font-black text-blue-300">0</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
+          <div class="grid grid-cols-3 gap-2 w-48 sm:w-44 flex-shrink-0">
+            <div></div>
+            <button onclick="movePlayer(1, 'up')" class="tap-btn h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-2xl font-black shadow border-b-4 border-blue-800 flex items-center justify-center">⬆️</button>
+            <div></div>
+            <button onclick="movePlayer(1, 'left')" class="tap-btn h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-2xl font-black shadow border-b-4 border-blue-800 flex items-center justify-center">⬅️</button>
+            <button onclick="movePlayer(1, 'down')" class="tap-btn h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-2xl font-black shadow border-b-4 border-blue-800 flex items-center justify-center">⬇️</button>
+            <button onclick="movePlayer(1, 'right')" class="tap-btn h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-2xl font-black shadow border-b-4 border-blue-800 flex items-center justify-center">➡️</button>
+          </div>
+          <div id="duelBoard1" class="duel-board-wrap w-full max-w-[270px] aspect-square bg-slate-950 p-2.5 rounded-2xl relative border-2 border-blue-500/40 shadow-inner touch-none">
+            <div class="grid grid-cols-4 grid-rows-4 gap-2 w-full h-full pointer-events-none">
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+            </div>
+            <div id="duelTileContainer1" class="absolute inset-2.5 pointer-events-none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. JÁTÉKOS: PIROS -->
+      <div class="bg-slate-900/80 border-4 border-rose-500/60 rounded-3xl p-4 flex flex-col items-center justify-between shadow-2xl">
+        <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-rose-500/30">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
+            <span class="font-black text-sm text-rose-300 uppercase tracking-wider">2. Játékos (Piros)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-400">Pont:</span>
+            <span id="duelScore2" class="font-mono text-lg font-black text-rose-300">0</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row-reverse items-center gap-3 w-full justify-center">
+          <div class="grid grid-cols-3 gap-2 w-48 sm:w-44 flex-shrink-0">
+            <div></div>
+            <button onclick="movePlayer(2, 'up')" class="tap-btn h-14 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-2xl font-black shadow border-b-4 border-rose-800 flex items-center justify-center">⬆️</button>
+            <div></div>
+            <button onclick="movePlayer(2, 'left')" class="tap-btn h-14 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-2xl font-black shadow border-b-4 border-rose-800 flex items-center justify-center">⬅️</button>
+            <button onclick="movePlayer(2, 'down')" class="tap-btn h-14 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-2xl font-black shadow border-b-4 border-rose-800 flex items-center justify-center">⬇️</button>
+            <button onclick="movePlayer(2, 'right')" class="tap-btn h-14 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-2xl font-black shadow border-b-4 border-rose-800 flex items-center justify-center">➡️</button>
+          </div>
+          <div id="duelBoard2" class="duel-board-wrap w-full max-w-[270px] aspect-square bg-slate-950 p-2.5 rounded-2xl relative border-2 border-rose-500/40 shadow-inner touch-none">
+            <div class="grid grid-cols-4 grid-rows-4 gap-2 w-full h-full pointer-events-none">
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+              <div class="w-full h-full rounded-xl bg-slate-900/50"></div>
+            </div>
+            <div id="duelTileContainer2" class="absolute inset-2.5 pointer-events-none"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- NÉVBEÍRÓ MODAL -->
+  <div id="nameModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-4 border-amber-400 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center">
+      <div id="modalIcon" class="text-5xl mb-2">🎉</div>
+      <h3 id="modalTitle" class="text-2xl font-black text-amber-300">Elérted a 2048-at!</h3>
+      <p id="modalSub" class="text-xs text-slate-300 mb-4">Írd be a neved a rangsorba:</p>
+      
+      <input type="text" id="playerNameInput" placeholder="Tanuló neve..." maxlength="18" class="w-full bg-slate-950 border-2 border-slate-700 focus:border-amber-400 rounded-xl px-4 py-2.5 text-white font-bold text-center text-lg outline-none mb-4">
+      
+      <div class="flex gap-2.5 w-full">
+        <button onclick="savePlayerScore()" class="tap-btn flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg transition">
+          Mentés
+        </button>
+        <button onclick="closeNameModal()" class="tap-btn px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition">
+          Bezárás
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let soundEnabled = true;
+    let audioCtx = null;
+    let nextTileId = 1;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) audioCtx = new AudioClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.05) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      const text = document.getElementById('soundText');
+      if (soundEnabled) {
+        icon.className = 'ph-bold ph-speaker-high text-base';
+        text.textContent = 'Hang: BE';
+        playTone(600);
+      } else {
+        icon.className = 'ph-bold ph-speaker-slash text-base';
+        text.textContent = 'Hang: KI';
+      }
+    }
+
+    let currentMode = 1;
+    let activeModalPlayer = 1;
+
+    let p1Data = {
+      tiles: [],
+      score: 0,
+      won: false,
+      isMoving: false
+    };
+    let p2Data = {
+      tiles: [],
+      score: 0,
+      won: false,
+      isMoving: false
+    };
+
+    let p1Best = parseInt(localStorage.getItem('board_2048_best') || '0', 10);
+
+    function switchGameMode(mode) {
+      currentMode = mode;
+      playTone(520);
+      const b1 = document.getElementById('modeBtn1P');
+      const b2 = document.getElementById('modeBtn2P');
+      const v1 = document.getElementById('view1Player');
+      const v2 = document.getElementById('view2Player');
+      const badge = document.getElementById('currentModeBadge');
+
+      if (mode === 1) {
+        b1.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-indigo-600 text-white shadow-md flex items-center gap-1.5';
+        b2.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+        v1.classList.remove('hidden');
+        v1.classList.add('flex');
+        v2.classList.add('hidden');
+        v2.classList.remove('grid');
+        badge.textContent = '1 Játékos';
+        renderBoardDOM(1);
+      } else {
+        b2.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-indigo-600 text-white shadow-md flex items-center gap-1.5';
+        b1.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+        v1.classList.add('hidden');
+        v1.classList.remove('flex');
+        v2.classList.remove('hidden');
+        v2.classList.add('grid');
+        badge.textContent = '2 Játékos Párbaj';
+        renderBoardDOM(1);
+        renderBoardDOM(2);
+      }
+    }
+
+    function resetCurrentViewGames() {
+      playTone(400);
+      resetGame(1);
+      if (currentMode === 2) resetGame(2);
+    }
+
+    function getTileContainer(pNum) {
+      if (currentMode === 1) {
+        return document.getElementById('p1TileContainer');
+      }
+      return document.getElementById(pNum === 1 ? 'duelTileContainer1' : 'duelTileContainer2');
+    }
+
+    function resetGame(pNum) {
+      const p = pNum === 1 ? p1Data : p2Data;
+      p.tiles = [];
+      p.score = 0;
+      p.won = false;
+      p.isMoving = false;
+
+      const container = getTileContainer(pNum);
+      if (container) container.innerHTML = '';
+
+      spawnTile(p);
+      spawnTile(p);
+      renderBoardDOM(pNum);
+    }
+
+    function spawnTile(p) {
+      const occupied = new Set(p.tiles.map(t => `${t.r},${t.c}`));
+      const empty = [];
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (!occupied.has(`${r},${c}`)) empty.push({ r, c });
+        }
+      }
+      if (empty.length === 0) return;
+      const pick = empty[Math.floor(Math.random() * empty.length)];
+      p.tiles.push({
+        id: nextTileId++,
+        r: pick.r,
+        c: pick.c,
+        val: Math.random() < 0.9 ? 2 : 4,
+        isNew: true,
+        merged: false,
+        toRemove: false
+      });
+    }
+
+    /* Kockák azonnali pozíció-frissítése a csúszási animáció indításához */
+    function updateTilePositions(pNum) {
+      const p = pNum === 1 ? p1Data : p2Data;
+      p.tiles.forEach(t => {
+        const el = document.getElementById(`tile-${pNum}-${t.id}`);
+        if (el) {
+          el.style.transform = `translate(calc(${t.c} * (100% + var(--b-gap))), calc(${t.r} * (100% + var(--b-gap))))`;
+          el.style.zIndex = t.toRemove ? '5' : '10';
+        }
+      });
+    }
+
+    /* DOM Teljes kirajzolása */
+    function renderBoardDOM(pNum) {
+      const p = pNum === 1 ? p1Data : p2Data;
+      
+      // Pontszámok
+      if (currentMode === 1 && pNum === 1) {
+        document.getElementById('p1Score').textContent = p.score;
+        if (p.score > p1Best) {
+          p1Best = p.score;
+          localStorage.setItem('board_2048_best', p1Best);
+          document.getElementById('p1Best').textContent = p1Best;
+        }
+      } else {
+        const sEl = document.getElementById(pNum === 1 ? 'duelScore1' : 'duelScore2');
+        if (sEl) sEl.textContent = p.score;
+      }
+
+      const container = getTileContainer(pNum);
+      if (!container) return;
+
+      // Meglévő elemek törlése, ha már nincsenek a listában
+      const activeIds = new Set(p.tiles.map(t => `tile-${pNum}-${t.id}`));
+      Array.from(container.children).forEach(child => {
+        if (!activeIds.has(child.id)) {
+          child.remove();
+        }
+      });
+
+      // Elemek létrehozása és frissítése
+      p.tiles.forEach(t => {
+        let el = document.getElementById(`tile-${pNum}-${t.id}`);
+        let fontSizeClass = t.val >= 1024 ? 'text-lg sm:text-xl' : (t.val >= 128 ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl');
+
+        if (!el) {
+          el = document.createElement('div');
+          el.id = `tile-${pNum}-${t.id}`;
+          el.className = 'tile-node';
+          el.style.transform = `translate(calc(${t.c} * (100% + var(--b-gap))), calc(${t.r} * (100% + var(--b-gap))))`;
+          el.innerHTML = `
+            <div class="tile-inner tile-${t.val} ${fontSizeClass} ${t.isNew ? 'pop-new' : ''}">
+              ${t.val}
+            </div>
+          `;
+          container.appendChild(el);
+          t.isNew = false;
+        } else {
+          el.style.transform = `translate(calc(${t.c} * (100% + var(--b-gap))), calc(${t.r} * (100% + var(--b-gap))))`;
+          const inner = el.querySelector('.tile-inner');
+          if (inner) {
+            inner.className = `tile-inner tile-${t.val} ${fontSizeClass} ${t.merged ? 'pop-merge' : ''}`;
+            inner.textContent = t.val;
+          }
+        }
+      });
+    }
+
+    function movePlayer(pNum, direction) {
+      const p = pNum === 1 ? p1Data : p2Data;
+      if (p.isMoving) return;
+
+      const vector = {
+        up: { r: -1, c: 0 },
+        down: { r: 1, c: 0 },
+        left: { r: 0, c: -1 },
+        right: { r: 0, c: 1 }
+      }[direction];
+
+      let matrix = Array.from({ length: 4 }, () => Array(4).fill(null));
+      p.tiles.forEach(t => {
+        if (!t.toRemove) matrix[t.r][t.c] = t;
+      });
+
+      let moved = false;
+      const rowOrder = (direction === 'down') ? [3, 2, 1, 0] : [0, 1, 2, 3];
+      const colOrder = (direction === 'right') ? [3, 2, 1, 0] : [0, 1, 2, 3];
+
+      for (let r of rowOrder) {
+        for (let c of colOrder) {
+          const tile = matrix[r][c];
+          if (!tile) continue;
+
+          let currR = r;
+          let currC = c;
+          let nextR = currR + vector.r;
+          let nextC = currC + vector.c;
+
+          while (nextR >= 0 && nextR < 4 && nextC >= 0 && nextC < 4 && !matrix[nextR][nextC]) {
+            currR = nextR;
+            currC = nextC;
+            nextR = currR + vector.r;
+            nextC = currC + vector.c;
+          }
+
+          if (
+            nextR >= 0 && nextR < 4 && nextC >= 0 && nextC < 4 &&
+            matrix[nextR][nextC] &&
+            matrix[nextR][nextC].val === tile.val &&
+            !matrix[nextR][nextC].merged &&
+            !tile.merged
+          ) {
+            const target = matrix[nextR][nextC];
+            matrix[r][c] = null;
+
+            tile.r = nextR;
+            tile.c = nextC;
+            tile.toRemove = true;
+
+            target.val *= 2;
+            target.merged = true;
+            p.score += target.val;
+
+            if (target.val === 2048 && !p.won) {
+              p.won = true;
+              setTimeout(() => triggerWin(pNum), 180);
+            }
+
+            moved = true;
+          } else if (currR !== r || currC !== c) {
+            matrix[r][c] = null;
+            matrix[currR][currC] = tile;
+            tile.r = currR;
+            tile.c = currC;
+            moved = true;
+          }
+        }
+      }
+
+      if (moved) {
+        p.isMoving = true;
+        playTone(pNum === 1 ? 580 : 660, 'sine', 0.04);
+
+        // 1. Kockák animált csúsztatása a célhelyükre
+        updateTilePositions(pNum);
+
+        // 2. A csúszás befejeződése után töröljük az összeolvadt kockákat, növeljük az értéket és újat hozunk létre
+        setTimeout(() => {
+          p.tiles = p.tiles.filter(t => !t.toRemove);
+          p.tiles.forEach(t => t.merged = false);
+
+          spawnTile(p);
+          renderBoardDOM(pNum);
+
+          p.isMoving = false;
+          checkGameOver(pNum);
+        }, 115);
+      }
+    }
+
+    function checkGameOver(pNum) {
+      const p = pNum === 1 ? p1Data : p2Data;
+      if (p.tiles.length < 16) return;
+
+      let matrix = Array.from({ length: 4 }, () => Array(4).fill(0));
+      p.tiles.forEach(t => matrix[t.r][t.c] = t.val);
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          if (c < 3 && matrix[r][c] === matrix[r][c + 1]) return;
+          if (r < 3 && matrix[r][c] === matrix[r + 1][c]) return;
+        }
+      }
+
+      playTone(220, 'sawtooth', 0.15);
+      openNameModal(pNum, false, true);
+    }
+
+    function triggerWin(pNum) {
+      playTone(880, 'triangle', 0.2);
+      try {
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        }
+      } catch (e) {}
+      openNameModal(pNum, true);
+    }
+
+    /* RANGSOR */
+    function getLeaderboard() {
+      try {
+        return JSON.parse(localStorage.getItem('board_2048_leaderboard') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboardList');
+      if (!container) return;
+      const list = getLeaderboard();
+      container.innerHTML = '';
+      if (list.length === 0) {
+        container.innerHTML = '<span class="text-slate-500 italic text-center my-auto">Még nincs rögzített név.</span>';
+        return;
+      }
+      list.slice(0, 5).forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-300';
+        row.innerHTML = `
+          <span class="truncate"><span class="text-amber-400 mr-1">${idx + 1}.</span> ${item.name}</span>
+          <span class="font-mono text-emerald-400 font-bold">${item.score} p</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function openNameModal(pNum, isWin = false, isGameOver = false) {
+      activeModalPlayer = pNum;
+      const modal = document.getElementById('nameModal');
+      const title = document.getElementById('modalTitle');
+      const icon = document.getElementById('modalIcon');
+      const input = document.getElementById('playerNameInput');
+      if (!modal) return;
+
+      if (isWin) {
+        icon.textContent = '👑';
+        title.textContent = `${pNum}. Játékos elérte a 2048-at!`;
+      } else if (isGameOver) {
+        icon.textContent = '🏁';
+        title.textContent = 'Nincs több lépés!';
+      } else {
+        icon.textContent = '📝';
+        title.textContent = 'Eredmény mentése';
+      }
+      if (input) input.value = '';
+      modal.classList.remove('hidden');
+      if (input) setTimeout(() => input.focus(), 60);
+    }
+
+    function closeNameModal() {
+      const modal = document.getElementById('nameModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function savePlayerScore() {
+      const input = document.getElementById('playerNameInput');
+      const name = (input && input.value.trim()) || 'Névtelen Bajnok';
+      const score = (activeModalPlayer === 1 ? p1Data.score : p2Data.score);
+      const list = getLeaderboard();
+      list.push({ name, score, date: new Date().toLocaleDateString('hu-HU') });
+      list.sort((a, b) => b.score - a.score);
+      localStorage.setItem('board_2048_leaderboard', JSON.stringify(list));
+      closeNameModal();
+      renderLeaderboard();
+      playTone(784);
+    }
+
+    function clearLeaderboard() {
+      if (confirm('Biztosan törlöd a 2048 rangsort?')) {
+        localStorage.removeItem('board_2048_leaderboard');
+        renderLeaderboard();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        if (e.key === 'ArrowUp') movePlayer(1, 'up');
+        if (e.key === 'ArrowDown') movePlayer(1, 'down');
+        if (e.key === 'ArrowLeft') movePlayer(1, 'left');
+        if (e.key === 'ArrowRight') movePlayer(1, 'right');
+      }
+      if (currentMode === 2) {
+        const k = e.key.toLowerCase();
+        if (['w', 'a', 's', 'd'].includes(k)) {
+          e.preventDefault();
+          if (k === 'w') movePlayer(2, 'up');
+          if (k === 's') movePlayer(2, 'down');
+          if (k === 'a') movePlayer(2, 'left');
+          if (k === 'd') movePlayer(2, 'right');
+        }
+      }
+    });
+
+    function setupSwipe(elementId, pNum) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      let sx = 0, sy = 0;
+      el.addEventListener('touchstart', (e) => {
+        sx = e.touches[0].clientX;
+        sy = e.touches[0].clientY;
+      }, { passive: true });
+      el.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = e.changedTouches[0].clientY - sy;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) > 25) {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            movePlayer(pNum, dx > 0 ? 'right' : 'left');
+          } else {
+            movePlayer(pNum, dy > 0 ? 'down' : 'up');
+          }
+        }
+      }, { passive: true });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('p1Best').textContent = p1Best;
+      renderLeaderboard();
+      resetGame(1);
+      resetGame(2);
+      setupSwipe('p1Board', 1);
+      setupSwipe('duelBoard1', 1);
+      setupSwipe('duelBoard2', 2);
+    });
+  </script>
+</body>
+</html>
