@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Tetris Tábla - Osztott Képernyős Mód</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: radial-gradient(circle at 50% 20%, #151a2e 0%, #070913 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* Glassmorphism panelek */
+        .glass-panel {
+            background: rgba(18, 24, 43, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Digitális táblára szabott nagyméretű, neon érintőgombok */
+        .touch-btn {
+            touch-action: none;
+            transition: all 0.08s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .touch-btn:active, .touch-btn.active-press {
+            transform: scale(0.92);
+            filter: brightness(1.3);
+        }
+
+        /* Játékos táblák neon keretei */
+        .p1-board-glow {
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .p2-board-glow {
+            border: 2px solid #ff007b;
+            box-shadow: 0 0 25px rgba(255, 0, 123, 0.25), inset 0 0 15px rgba(255, 0, 123, 0.1);
+        }
+
+        /* Digitális rács canvas háttér */
+        .board-canvas {
+            image-rendering: pixelated;
+        }
+
+        /* Pulzáló animációk */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.3; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+    <header class="w-full glass-panel border-b border-white/10 px-4 py-2.5 z-40 sticky top-0">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Logó és státusz -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-orbitron font-black text-xl">
+                    T
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black font-orbitron tracking-wider bg-gradient-to-r from-cyan-400 via-sky-200 to-fuchsia-400 bg-clip-text text-transparent">
+                        SMART TETRIS
+                    </h1>
+                    <span class="text-xs uppercase tracking-widest text-cyan-400/80 font-semibold block -mt-1">
+                        Digitális Tábla Kiadás
+                    </span>
+                </div>
+            </div>
+
+            <!-- Fő vezérlőgombok: Módváltó, Új játék, Hang, Teljes képernyő -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <!-- 1P / 2P Osztott képernyő módváltó gomb -->
+                <button id="modeToggleBtn" class="flex items-center gap-2 px-4 py-2 rounded-xl font-orbitron font-bold text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border border-pink-400/40 shadow-lg shadow-pink-600/30 active:scale-95 transition-all">
+                    <i class="fa-solid fa-users text-lg"></i>
+                    <span id="modeText">Kétjátékos (Osztott)</span>
+                </button>
+
+                <!-- Új játék -->
+                <button id="resetAllBtn" class="flex items-center gap-2 px-3.5 py-2 rounded-xl font-semibold text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 active:scale-95 transition-all">
+                    <i class="fa-solid fa-rotate-right text-cyan-400"></i>
+                    <span class="hidden sm:inline">Új játék</span>
+                </button>
+
+                <!-- Hang kapcsoló -->
+                <button id="soundToggleBtn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-400 active:scale-95 transition-all" title="Hang be/ki">
+                    <i class="fa-solid fa-volume-high text-lg" id="soundIcon"></i>
+                </button>
+
+                <!-- Teljes képernyő (kiemelten hasznos digitális táblán) -->
+                <button id="fullscreenBtn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 active:scale-95 transition-all" title="Teljes képernyő">
+                    <i class="fa-solid fa-expand text-lg"></i>
+                </button>
+
+                <!-- Információs súgó gomb -->
+                <button id="helpBtn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 active:scale-95 transition-all" title="Billentyűzet / Szabályok">
+                    <i class="fa-solid fa-circle-question text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 flex flex-col justify-center items-center">
+        <div id="gameLayoutContainer" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 items-start justify-center transition-all duration-300">
+            
+            <!-- 1. JÁTÉKOS PANEL (KÉK/CYAN TÉMA) -->
+            <div id="player1Section" class="w-full flex flex-col items-center">
+                <!-- 1. Játékos Fejléc -->
+                <div class="w-full max-w-[420px] flex items-center justify-between px-3 py-1.5 mb-1.5 rounded-xl glass-panel border-cyan-500/30">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400 animate-ping"></span>
+                        <span class="font-orbitron font-bold text-cyan-400 text-base tracking-wider" id="p1Title">1. JÁTÉKOS</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs sm:text-sm font-orbitron font-semibold">
+                        <span class="text-slate-400">PONT: <span id="p1Score" class="text-white text-base font-bold">0</span></span>
+                        <span class="text-slate-400">SZINT: <span id="p1Level" class="text-cyan-300 text-base font-bold">1</span></span>
+                    </div>
+                </div>
+
+                <!-- 1. Játékos Játéktér és Előnézeti Panelek -->
+                <div class="flex items-start justify-center gap-2 sm:gap-3 w-full max-w-[420px]">
+                    <!-- Bal mini panel: HOLD (Megtartott) & Sorok -->
+                    <div class="flex flex-col gap-2 w-16 sm:w-20">
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block mb-1">TART</span>
+                            <canvas id="p1HoldCanvas" width="70" height="70" class="w-full aspect-square mx-auto rounded-lg bg-black/40"></canvas>
+                        </div>
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block">SOROK</span>
+                            <span id="p1Lines" class="font-orbitron font-bold text-base text-cyan-400">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Fő játéktábla (Canvas) -->
+                    <div class="relative rounded-2xl overflow-hidden p1-board-glow bg-black/85 flex-shrink-0">
+                        <canvas id="p1Board" width="240" height="480" class="board-canvas block"></canvas>
+                        
+                        <!-- Játék vége / Nyert overlay -->
+                        <div id="p1Overlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 hidden z-20 text-center">
+                            <i id="p1OverlayIcon" class="fa-solid fa-trophy text-4xl text-amber-400 mb-2"></i>
+                            <h3 id="p1OverlayTitle" class="font-orbitron text-2xl font-black text-cyan-400 tracking-wider">JÁTÉK VÉGE</h3>
+                            <p id="p1OverlayMsg" class="text-sm text-slate-300 mt-1 mb-4">Ügyes próba!</p>
+                            <button id="p1RestartBtn" class="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-bold text-sm shadow-lg shadow-cyan-500/40 active:scale-95 transition-all">
+                                Újrakezdés
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Jobb mini panel: NEXT (Következő) -->
+                    <div class="flex flex-col gap-2 w-16 sm:w-20">
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block mb-1">KÖV.</span>
+                            <canvas id="p1NextCanvas" width="70" height="70" class="w-full aspect-square mx-auto rounded-lg bg-black/40"></canvas>
+                        </div>
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block">TÁMADÁS</span>
+                            <span id="p1Attacks" class="font-orbitron font-bold text-base text-amber-400">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Játékos Digitális Tábla Érintőgombok (Nagy méretű gombok) -->
+                <div class="w-full max-w-[420px] mt-2.5 glass-panel rounded-2xl p-2 border-cyan-500/20">
+                    <div class="grid grid-cols-5 gap-1.5 sm:gap-2 mb-1.5">
+                        <!-- Hold gomb -->
+                        <button id="p1BtnHold" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-200 flex flex-col items-center justify-center active:bg-cyan-900/60 shadow-md">
+                            <i class="fa-solid fa-hand text-base text-cyan-400"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">TART</span>
+                        </button>
+                        <!-- Forgatás balra -->
+                        <button id="p1BtnRotLeft" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-cyan-950/70 border border-cyan-700/60 text-cyan-300 flex flex-col items-center justify-center active:bg-cyan-700 shadow-md">
+                            <i class="fa-solid fa-rotate-left text-lg"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">FORG L</span>
+                        </button>
+                        <!-- Gyors le (Hard drop) -->
+                        <button id="p1BtnHardDrop" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 flex flex-col items-center justify-center active:bg-amber-600 shadow-md">
+                            <i class="fa-solid fa-angles-down text-lg"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">LEDOB</span>
+                        </button>
+                        <!-- Forgatás jobbra -->
+                        <button id="p1BtnRotRight" class="touch-btn col-span-2 h-12 sm:h-14 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-cyan-400 text-white flex items-center justify-center gap-2 active:bg-cyan-400 shadow-lg shadow-cyan-600/30">
+                            <i class="fa-solid fa-rotate-right text-xl"></i>
+                            <span class="font-orbitron font-bold text-xs">FORGATÁS</span>
+                        </button>
+                    </div>
+
+                    <!-- Mozgás D-pad: Bal, Le (Soft drop), Jobb -->
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+                        <button id="p1BtnLeft" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-cyan-500/30 text-white flex items-center justify-center active:bg-cyan-800 shadow-md">
+                            <i class="fa-solid fa-arrow-left text-xl text-cyan-400"></i>
+                        </button>
+                        <button id="p1BtnDown" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-cyan-500/30 text-white flex items-center justify-center active:bg-cyan-800 shadow-md">
+                            <i class="fa-solid fa-arrow-down text-xl text-cyan-400"></i>
+                        </button>
+                        <button id="p1BtnRight" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-cyan-500/30 text-white flex items-center justify-center active:bg-cyan-800 shadow-md">
+                            <i class="fa-solid fa-arrow-right text-xl text-cyan-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. JÁTÉKOS PANEL (RÓZSASZÍN/MAGENTA TÉMA - OSZTOTT KÉPERNYŐBEN AKTÍV) -->
+            <div id="player2Section" class="w-full flex flex-col items-center">
+                <!-- 2. Játékos Fejléc -->
+                <div class="w-full max-w-[420px] flex items-center justify-between px-3 py-1.5 mb-1.5 rounded-xl glass-panel border-pink-500/30">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-pink-500 shadow-sm shadow-pink-500 animate-ping"></span>
+                        <span class="font-orbitron font-bold text-pink-400 text-base tracking-wider">2. JÁTÉKOS</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs sm:text-sm font-orbitron font-semibold">
+                        <span class="text-slate-400">PONT: <span id="p2Score" class="text-white text-base font-bold">0</span></span>
+                        <span class="text-slate-400">SZINT: <span id="p2Level" class="text-pink-300 text-base font-bold">1</span></span>
+                    </div>
+                </div>
+
+                <!-- 2. Játékos Játéktér és Előnézeti Panelek -->
+                <div class="flex items-start justify-center gap-2 sm:gap-3 w-full max-w-[420px]">
+                    <!-- Bal mini panel: HOLD (Megtartott) & Sorok -->
+                    <div class="flex flex-col gap-2 w-16 sm:w-20">
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block mb-1">TART</span>
+                            <canvas id="p2HoldCanvas" width="70" height="70" class="w-full aspect-square mx-auto rounded-lg bg-black/40"></canvas>
+                        </div>
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block">SOROK</span>
+                            <span id="p2Lines" class="font-orbitron font-bold text-base text-pink-400">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Fő játéktábla (Canvas) -->
+                    <div class="relative rounded-2xl overflow-hidden p2-board-glow bg-black/85 flex-shrink-0">
+                        <canvas id="p2Board" width="240" height="480" class="board-canvas block"></canvas>
+                        
+                        <!-- Játék vége / Nyert overlay -->
+                        <div id="p2Overlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 hidden z-20 text-center">
+                            <i id="p2OverlayIcon" class="fa-solid fa-trophy text-4xl text-amber-400 mb-2"></i>
+                            <h3 id="p2OverlayTitle" class="font-orbitron text-2xl font-black text-pink-400 tracking-wider">JÁTÉK VÉGE</h3>
+                            <p id="p2OverlayMsg" class="text-sm text-slate-300 mt-1 mb-4">Kiváló küzdelem!</p>
+                            <button id="p2RestartBtn" class="px-5 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-orbitron font-bold text-sm shadow-lg shadow-pink-500/40 active:scale-95 transition-all">
+                                Újrakezdés
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Jobb mini panel: NEXT (Következő) -->
+                    <div class="flex flex-col gap-2 w-16 sm:w-20">
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block mb-1">KÖV.</span>
+                            <canvas id="p2NextCanvas" width="70" height="70" class="w-full aspect-square mx-auto rounded-lg bg-black/40"></canvas>
+                        </div>
+                        <div class="glass-panel rounded-xl p-1.5 text-center border-white/5">
+                            <span class="text-[10px] font-orbitron uppercase text-slate-400 tracking-wider font-bold block">TÁMADÁS</span>
+                            <span id="p2Attacks" class="font-orbitron font-bold text-base text-amber-400">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Játékos Digitális Tábla Érintőgombok -->
+                <div class="w-full max-w-[420px] mt-2.5 glass-panel rounded-2xl p-2 border-pink-500/20">
+                    <div class="grid grid-cols-5 gap-1.5 sm:gap-2 mb-1.5">
+                        <!-- Hold gomb -->
+                        <button id="p2BtnHold" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-200 flex flex-col items-center justify-center active:bg-pink-900/60 shadow-md">
+                            <i class="fa-solid fa-hand text-base text-pink-400"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">TART</span>
+                        </button>
+                        <!-- Forgatás balra -->
+                        <button id="p2BtnRotLeft" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-pink-950/70 border border-pink-700/60 text-pink-300 flex flex-col items-center justify-center active:bg-pink-700 shadow-md">
+                            <i class="fa-solid fa-rotate-left text-lg"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">FORG L</span>
+                        </button>
+                        <!-- Gyors le (Hard drop) -->
+                        <button id="p2BtnHardDrop" class="touch-btn col-span-1 h-12 sm:h-14 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 flex flex-col items-center justify-center active:bg-amber-600 shadow-md">
+                            <i class="fa-solid fa-angles-down text-lg"></i>
+                            <span class="text-[9px] font-orbitron font-bold mt-0.5">LEDOB</span>
+                        </button>
+                        <!-- Forgatás jobbra -->
+                        <button id="p2BtnRotRight" class="touch-btn col-span-2 h-12 sm:h-14 rounded-xl bg-pink-600 hover:bg-pink-500 border border-pink-400 text-white flex items-center justify-center gap-2 active:bg-pink-400 shadow-lg shadow-pink-600/30">
+                            <i class="fa-solid fa-rotate-right text-xl"></i>
+                            <span class="font-orbitron font-bold text-xs">FORGATÁS</span>
+                        </button>
+                    </div>
+
+                    <!-- Mozgás D-pad -->
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+                        <button id="p2BtnLeft" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-pink-500/30 text-white flex items-center justify-center active:bg-pink-800 shadow-md">
+                            <i class="fa-solid fa-arrow-left text-xl text-pink-400"></i>
+                        </button>
+                        <button id="p2BtnDown" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-pink-500/30 text-white flex items-center justify-center active:bg-pink-800 shadow-md">
+                            <i class="fa-solid fa-arrow-down text-xl text-pink-400"></i>
+                        </button>
+                        <button id="p2BtnRight" class="touch-btn h-12 sm:h-14 rounded-xl bg-slate-800/90 border border-pink-500/30 text-white flex items-center justify-center active:bg-pink-800 shadow-md">
+                            <i class="fa-solid fa-arrow-right text-xl text-pink-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="helpModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel border-cyan-500/30 rounded-2xl max-w-lg w-full p-6 text-slate-200 relative max-h-[90vh] overflow-y-auto">
+            <button id="closeHelpBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 class="text-xl font-orbitron font-bold text-cyan-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-gamepad"></i> Irányítás és Játékszabályok
+            </h2>
+
+            <div class="space-y-4 text-sm leading-relaxed">
+                <div>
+                    <h4 class="font-bold text-white mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-chalkboard-user text-cyan-400"></i> Digitális Tábla Használat:
+                    </h4>
+                    <p class="text-slate-300">
+                        Közvetlenül az érintőképernyő alsó nagyméretű virtuális gombjait megérintve irányíthatjátok a blokkokat. Kétjátékos módban két személy kényelmesen megfér egymás mellett a tábla előtt!
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div class="bg-cyan-950/40 p-3 rounded-xl border border-cyan-500/30">
+                        <span class="font-bold text-cyan-300 block mb-1">1. Játékos (Billentyűzet):</span>
+                        <ul class="text-xs space-y-1 text-slate-300">
+                            <li><b class="text-white">A / D:</b> Balra / Jobbra</li>
+                            <li><b class="text-white">S:</b> Gyorsítás lefelé</li>
+                            <li><b class="text-white">W vagy E:</b> Forgatás</li>
+                            <li><b class="text-white">Space:</b> Ledobás azonnal</li>
+                            <li><b class="text-white">C:</b> Blokktartás (Hold)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-pink-950/40 p-3 rounded-xl border border-pink-500/30">
+                        <span class="font-bold text-pink-300 block mb-1">2. Játékos (Billentyűzet):</span>
+                        <ul class="text-xs space-y-1 text-slate-300">
+                            <li><b class="text-white">Nyilak (Bal/Jobb):</b> Mozgás</li>
+                            <li><b class="text-white">Nyíl Le:</b> Gyorsítás lefelé</li>
+                            <li><b class="text-white">Nyíl Fel:</b> Forgatás</li>
+                            <li><b class="text-white">Num 0 / Enter:</b> Ledobás</li>
+                            <li><b class="text-white">Shift / Numpad 1:</b> Tartás</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-amber-950/30 p-3 rounded-xl border border-amber-500/30 text-xs">
+                    <b class="text-amber-300">⚔️ Párbaj (Versus) Mechanika:</b><br>
+                    Ha 2 vagy több sort tüntetsz el egyszerre (Double, Triple, Tetris), büntetőszürke sorokat küldesz át az ellenfél táblájának aljára!
+                </div>
+            </div>
+
+            <button id="closeHelpModalAction" class="w-full mt-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-orbitron font-bold text-white transition-all">
+                Értem, játszunk!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* Beépített Web Audio Szintetizátor a késleltetésmentes táblajátékhoz */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, gainValue = 0.15) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainValue, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {
+                    console.warn("Audio play issue", e);
+                }
+            }
+
+            playMove() {
+                this.playTone(280, 'square', 0.05, 0.08);
+            }
+
+            playRotate() {
+                this.playTone(480, 'triangle', 0.07, 0.12);
+            }
+
+            playDrop() {
+                this.playTone(140, 'sine', 0.12, 0.2);
+            }
+
+            playHardDrop() {
+                this.playTone(90, 'triangle', 0.18, 0.25);
+            }
+
+            playHold() {
+                this.playTone(380, 'sawtooth', 0.09, 0.1);
+            }
+
+            playClear(lineCount) {
+                if (!this.enabled) return;
+                const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                for (let i = 0; i < Math.min(lineCount, 4); i++) {
+                    setTimeout(() => {
+                        this.playTone(freqs[i], 'triangle', 0.18, 0.2);
+                    }, i * 65);
+                }
+            }
+
+            playGarbage() {
+                this.playTone(110, 'sawtooth', 0.25, 0.25);
+            }
+
+            playGameOver() {
+                if (!this.enabled) return;
+                const freqs = [350, 300, 240, 180];
+                freqs.forEach((f, idx) => {
+                    setTimeout(() => this.playTone(f, 'sawtooth', 0.18, 0.2), idx * 110);
+                });
+            }
+        }
+
+        const sound = new SoundEngine();
+    </script>
+
+    <script>
+        const COLS = 10;
+        const ROWS = 20;
+
+        // Modern neon színpaletta és formák
+        const TETROMINOES = {
+            'I': {
+                shape: [
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0]
+                ],
+                color: '#00f0ff',
+                glow: 'rgba(0, 240, 255, 0.6)'
+            },
+            'J': {
+                shape: [
+                    [1, 0, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: '#2563eb',
+                glow: 'rgba(37, 99, 235, 0.6)'
+            },
+            'L': {
+                shape: [
+                    [0, 0, 1],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: '#f97316',
+                glow: 'rgba(249, 115, 22, 0.6)'
+            },
+            'O': {
+                shape: [
+                    [1, 1],
+                    [1, 1]
+                ],
+                color: '#facc15',
+                glow: 'rgba(250, 204, 21, 0.6)'
+            },
+            'S': {
+                shape: [
+                    [0, 1, 1],
+                    [1, 1, 0],
+                    [0, 0, 0]
+                ],
+                color: '#22c55e',
+                glow: 'rgba(34, 197, 94, 0.6)'
+            },
+            'T': {
+                shape: [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: '#a855f7',
+                glow: 'rgba(168, 85, 247, 0.6)'
+            },
+            'Z': {
+                shape: [
+                    [1, 1, 0],
+                    [0, 1, 1],
+                    [0, 0, 0]
+                ],
+                color: '#ef4444',
+                glow: 'rgba(239, 68, 68, 0.6)'
+            }
+        };
+
+        const GARBAGE_COLOR = '#475569';
+        const GARBAGE_GLOW = 'rgba(71, 85, 105, 0.4)';
+    </script>
+
+    <script>
+        class TetrisGame {
+            constructor(id, boardCanvasId, nextCanvasId, holdCanvasId, uiRefs, onGarbageSent) {
+                this.id = id;
+                this.boardCanvas = document.getElementById(boardCanvasId);
+                this.boardCtx = this.boardCanvas.getContext('2d');
+                this.nextCanvas = document.getElementById(nextCanvasId);
+                this.nextCtx = this.nextCanvas.getContext('2d');
+                this.holdCanvas = document.getElementById(holdCanvasId);
+                this.holdCtx = this.holdCanvas.getContext('2d');
+                this.ui = uiRefs;
+                this.onGarbageSent = onGarbageSent; // Versust támadás callback
+
+                this.grid = [];
+                this.bag = [];
+                this.currentPiece = null;
+                this.nextPieceKey = null;
+                this.holdPieceKey = null;
+                this.canHold = true;
+
+                this.score = 0;
+                this.lines = 0;
+                this.level = 1;
+                this.attacks = 0;
+                this.isGameOver = false;
+                this.isPaused = false;
+
+                this.dropCounter = 0;
+                this.dropInterval = 1000;
+                this.lastTime = 0;
+                this.animationFrameId = null;
+
+                // Animáció részecskék (sor törléskor látványos robbanás)
+                this.particles = [];
+
+                this.initGrid();
+                this.setupBlockDimensions();
+            }
+
+            setupBlockDimensions() {
+                // Skálázott cellaméret a felbontáshoz
+                this.blockSize = this.boardCanvas.width / COLS;
+            }
+
+            initGrid() {
+                this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            }
+
+            reset() {
+                this.initGrid();
+                this.bag = [];
+                this.score = 0;
+                this.lines = 0;
+                this.level = 1;
+                this.attacks = 0;
+                this.isGameOver = false;
+                this.canHold = true;
+                this.holdPieceKey = null;
+                this.particles = [];
+                this.dropInterval = 1000;
+                this.dropCounter = 0;
+                this.lastTime = 0;
+
+                this.updateUI();
+                this.hideOverlay();
+                this.nextPieceKey = this.getNextFromBag();
+                this.spawnPiece();
+                this.drawHold();
+                this.drawNext();
+            }
+
+            getNextFromBag() {
+                if (this.bag.length === 0) {
+                    const keys = Object.keys(TETROMINOES);
+                    for (let i = keys.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [keys[i], keys[j]] = [keys[j], keys[i]];
+                    }
+                    this.bag = keys;
+                }
+                return this.bag.pop();
+            }
+
+            spawnPiece() {
+                const key = this.nextPieceKey;
+                this.nextPieceKey = this.getNextFromBag();
+                this.currentPiece = {
+                    key: key,
+                    shape: TETROMINOES[key].shape.map(row => [...row]),
+                    color: TETROMINOES[key].color,
+                    glow: TETROMINOES[key].glow,
+                    x: Math.floor(COLS / 2) - Math.ceil(TETROMINOES[key].shape[0].length / 2),
+                    y: 0
+                };
+                this.canHold = true;
+                this.drawNext();
+
+                // Ütközés ellenőrzése azonnal -> Game Over
+                if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
+                    this.triggerGameOver();
+                }
+            }
+
+            checkCollision(offsetX, offsetY, matrix) {
+                for (let r = 0; r < matrix.length; r++) {
+                    for (let c = 0; c < matrix[r].length; c++) {
+                        if (matrix[r][c]) {
+                            const newX = offsetX + c;
+                            const newY = offsetY + r;
+                            if (newX < 0 || newX >= COLS || newY >= ROWS) {
+                                return true;
+                            }
+                            if (newY >= 0 && this.grid[newY][newX]) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            rotateMatrix(matrix, dir = 1) {
+                const N = matrix.length;
+                const result = Array.from({ length: N }, () => Array(N).fill(0));
+                for (let r = 0; r < N; r++) {
+                    for (let c = 0; c < N; c++) {
+                        if (dir > 0) {
+                            result[c][N - 1 - r] = matrix[r][c];
+                        } else {
+                            result[N - 1 - c][r] = matrix[r][c];
+                        }
+                    }
+                }
+                return result;
+            }
+
+            rotate(dir = 1) {
+                if (this.isGameOver || !this.currentPiece) return;
+                const prevShape = this.currentPiece.shape;
+                const rotated = this.rotateMatrix(prevShape, dir);
+                
+                // Falrúgási (Wall Kick) pozíciók kipróbálása
+                const kicks = [0, -1, 1, -2, 2];
+                for (let offset of kicks) {
+                    if (!this.checkCollision(this.currentPiece.x + offset, this.currentPiece.y, rotated)) {
+                        this.currentPiece.shape = rotated;
+                        this.currentPiece.x += offset;
+                        sound.playRotate();
+                        return;
+                    }
+                }
+            }
+
+            move(dir) {
+                if (this.isGameOver || !this.currentPiece) return;
+                if (!this.checkCollision(this.currentPiece.x + dir, this.currentPiece.y, this.currentPiece.shape)) {
+                    this.currentPiece.x += dir;
+                    sound.playMove();
+                }
+            }
+
+            softDrop() {
+                if (this.isGameOver || !this.currentPiece) return false;
+                if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
+                    this.currentPiece.y++;
+                    this.score += 1;
+                    this.updateUI();
+                    return true;
+                } else {
+                    this.lockPiece();
+                    return false;
+                }
+            }
+
+            hardDrop() {
+                if (this.isGameOver || !this.currentPiece) return;
+                let droppedRows = 0;
+                while (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
+                    this.currentPiece.y++;
+                    droppedRows++;
+                }
+                this.score += droppedRows * 2;
+                this.updateUI();
+                sound.playHardDrop();
+                this.lockPiece();
+            }
+
+            hold() {
+                if (this.isGameOver || !this.currentPiece || !this.canHold) return;
+                sound.playHold();
+                if (!this.holdPieceKey) {
+                    this.holdPieceKey = this.currentPiece.key;
+                    this.spawnPiece();
+                } else {
+                    const temp = this.currentPiece.key;
+                    const nextHold = this.holdPieceKey;
+                    this.holdPieceKey = temp;
+                    this.currentPiece = {
+                        key: nextHold,
+                        shape: TETROMINOES[nextHold].shape.map(row => [...row]),
+                        color: TETROMINOES[nextHold].color,
+                        glow: TETROMINOES[nextHold].glow,
+                        x: Math.floor(COLS / 2) - Math.ceil(TETROMINOES[nextHold].shape[0].length / 2),
+                        y: 0
+                    };
+                }
+                this.canHold = false;
+                this.drawHold();
+            }
+
+            getGhostY() {
+                if (!this.currentPiece) return 0;
+                let ghostY = this.currentPiece.y;
+                while (!this.checkCollision(this.currentPiece.x, ghostY + 1, this.currentPiece.shape)) {
+                    ghostY++;
+                }
+                return ghostY;
+            }
+
+            lockPiece() {
+                const shape = this.currentPiece.shape;
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c]) {
+                            const gy = this.currentPiece.y + r;
+                            const gx = this.currentPiece.x + c;
+                            if (gy >= 0 && gy < ROWS && gx >= 0 && gx < COLS) {
+                                this.grid[gy][gx] = {
+                                    color: this.currentPiece.color,
+                                    glow: this.currentPiece.glow
+                                };
+                            }
+                        }
+                    }
+                }
+                sound.playDrop();
+                this.clearLines();
+                this.spawnPiece();
+            }
+
+            clearLines() {
+                let linesCleared = 0;
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (this.grid[r].every(cell => cell !== 0)) {
+                        // Részecskék létrehozása a törölt sor helyén
+                        this.createClearParticles(r);
+                        this.grid.splice(r, 1);
+                        this.grid.unshift(Array(COLS).fill(0));
+                        linesCleared++;
+                        r++; // Újra ellenőrizzük ezt a sort, mert a feljebbi idecsúszott
+                    }
+                }
+
+                if (linesCleared > 0) {
+                    this.lines += linesCleared;
+                    const lineScores = [0, 100, 300, 500, 800];
+                    this.score += (lineScores[linesCleared] || 1000) * this.level;
+                    this.level = Math.floor(this.lines / 10) + 1;
+                    // Sebesség növelése a szinttel
+                    this.dropInterval = Math.max(120, 1000 - (this.level - 1) * 85);
+                    sound.playClear(linesCleared);
+                    this.updateUI();
+
+                    // Párbaj támadás (2+ sor esetén büntetősor az ellenfélnek)
+                    if (this.onGarbageSent && linesCleared >= 2) {
+                        let garbageCount = linesCleared === 4 ? 4 : (linesCleared - 1);
+                        this.attacks += garbageCount;
+                        this.updateUI();
+                        this.onGarbageSent(garbageCount);
+                    }
+                }
+            }
+
+            receiveGarbage(count) {
+                if (this.isGameOver) return;
+                sound.playGarbage();
+                for (let i = 0; i < count; i++) {
+                    this.grid.shift();
+                    const garbageRow = Array(COLS).fill({
+                        color: GARBAGE_COLOR,
+                        glow: GARBAGE_GLOW
+                    });
+                    // Véletlenszerű lyuk a büntetősorban
+                    const hole = Math.floor(Math.random() * COLS);
+                    garbageRow[hole] = 0;
+                    this.grid.push(garbageRow);
+                }
+                // Ha a most zuhanó darab ütközésbe került a felnyomott sorokkal:
+                if (this.currentPiece && this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
+                    this.currentPiece.y = Math.max(0, this.currentPiece.y - count);
+                    if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
+                        this.triggerGameOver();
+                    }
+                }
+            }
+
+            createClearParticles(row) {
+                const yPos = row * this.blockSize + this.blockSize / 2;
+                for (let c = 0; c < COLS; c++) {
+                    const xPos = c * this.blockSize + this.blockSize / 2;
+                    for (let p = 0; p < 4; p++) {
+                        this.particles.push({
+                            x: xPos,
+                            y: yPos,
+                            vx: (Math.random() - 0.5) * 8,
+                            vy: (Math.random() - 0.5) * 8,
+                            color: '#ffffff',
+                            life: 1.0
+                        });
+                    }
+                }
+            }
+
+            triggerGameOver() {
+                this.isGameOver = true;
+                sound.playGameOver();
+                this.showOverlay("JÁTÉK VÉGE", `Elért pont: ${this.score}`, "fa-skull-crossbones text-rose-500");
+                if (this.onGameOver) {
+                    this.onGameOver(this.id);
+                }
+            }
+
+            showOverlay(title, msg, iconClass) {
+                this.ui.overlayTitle.innerText = title;
+                this.ui.overlayMsg.innerText = msg;
+                this.ui.overlayIcon.className = `fa-solid ${iconClass} text-4xl mb-2`;
+                this.ui.overlay.classList.remove('hidden');
+            }
+
+            hideOverlay() {
+                this.ui.overlay.classList.add('hidden');
+            }
+
+            updateUI() {
+                this.ui.score.innerText = this.score;
+                this.ui.level.innerText = this.level;
+                this.ui.lines.innerText = this.lines;
+                if (this.ui.attacks) {
+                    this.ui.attacks.innerText = this.attacks;
+                }
+            }
+
+            drawBlock(ctx, x, y, size, color, glow, isGhost = false) {
+                const pad = 1.5;
+                const bs = size - pad * 2;
+                const rx = x * size + pad;
+                const ry = y * size + pad;
+
+                ctx.save();
+                if (isGhost) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(rx, ry, bs, bs);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.fillRect(rx, ry, bs, bs);
+                } else {
+                    ctx.fillStyle = color;
+                    ctx.shadowColor = glow || color;
+                    ctx.shadowBlur = 8;
+                    ctx.fillRect(rx, ry, bs, bs);
+
+                    // Csillogó belső él-kiemelés
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(rx, ry, bs, 3);
+                    ctx.fillRect(rx, ry, 3, bs);
+                }
+                ctx.restore();
+            }
+
+            drawMiniPiece(ctx, canvas, pieceKey) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (!pieceKey || !TETROMINOES[pieceKey]) return;
+
+                const piece = TETROMINOES[pieceKey];
+                const shape = piece.shape;
+                const size = 14;
+                const width = shape[0].length * size;
+                const height = shape.length * size;
+                const startX = (canvas.width - width) / 2;
+                const startY = (canvas.height - height) / 2;
+
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c]) {
+                            this.drawBlock(ctx, (startX / size) + c, (startY / size) + r, size, piece.color, piece.glow);
+                        }
+                    }
+                }
+            }
+
+            drawHold() {
+                this.drawMiniPiece(this.holdCtx, this.holdCanvas, this.holdPieceKey);
+            }
+
+            drawNext() {
+                this.drawMiniPiece(this.nextCtx, this.nextCanvas, this.nextPieceKey);
+            }
+
+            draw() {
+                const ctx = this.boardCtx;
+                ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+
+                // Finom háttérrács
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x <= COLS; x++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * this.blockSize, 0);
+                    ctx.lineTo(x * this.blockSize, this.boardCanvas.height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y <= ROWS; y++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y * this.blockSize);
+                    ctx.lineTo(this.boardCanvas.width, y * this.blockSize);
+                    ctx.stroke();
+                }
+
+                // Grid rajzolása
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        if (this.grid[r][c]) {
+                            this.drawBlock(ctx, c, r, this.blockSize, this.grid[r][c].color, this.grid[r][c].glow);
+                        }
+                    }
+                }
+
+                // Szellem blokk (Ghost Piece)
+                if (this.currentPiece && !this.isGameOver) {
+                    const ghostY = this.getGhostY();
+                    const shape = this.currentPiece.shape;
+                    for (let r = 0; r < shape.length; r++) {
+                        for (let c = 0; c < shape[r].length; c++) {
+                            if (shape[r][c]) {
+                                this.drawBlock(ctx, this.currentPiece.x + c, ghostY + r, this.blockSize, this.currentPiece.color, null, true);
+                            }
+                        }
+                    }
+
+                    // Aktuális zuhanó darab
+                    for (let r = 0; r < shape.length; r++) {
+                        for (let c = 0; c < shape[r].length; c++) {
+                            if (shape[r][c]) {
+                                this.drawBlock(ctx, this.currentPiece.x + c, this.currentPiece.y + r, this.blockSize, this.currentPiece.color, this.currentPiece.glow);
+                            }
+                        }
+                    }
+                }
+
+                // Sor törlés részecskék rajzolása & frissítése
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.04;
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+                    ctx.fillRect(p.x, p.y, 3, 3);
+                }
+            }
+
+            update(time = 0) {
+                if (!this.isPaused && !this.isGameOver) {
+                    const deltaTime = time - this.lastTime;
+                    this.lastTime = time;
+                    this.dropCounter += deltaTime;
+
+                    if (this.dropCounter > this.dropInterval) {
+                        this.softDrop();
+                        this.dropCounter = 0;
+                    }
+                    this.draw();
+                }
+                this.animationFrameId = requestAnimationFrame((t) => this.update(t));
+            }
+
+            start() {
+                if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                this.reset();
+                this.lastTime = performance.now();
+                this.update(this.lastTime);
+            }
+        }
+    </script>
+
+    <script>
+        let isTwoPlayer = true;
+        let p1Game = null;
+        let p2Game = null;
+
+        // UI elemek kigyűjtése
+        const modeToggleBtn = document.getElementById('modeToggleBtn');
+        const modeText = document.getElementById('modeText');
+        const player2Section = document.getElementById('player2Section');
+        const gameLayoutContainer = document.getElementById('gameLayoutContainer');
+        const resetAllBtn = document.getElementById('resetAllBtn');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const closeHelpBtn = document.getElementById('closeHelpBtn');
+        const closeHelpModalAction = document.getElementById('closeHelpModalAction');
+
+        // Érintőgombok ismétléses (DAS) kezelő segédfüggvény digitális táblához
+        function bindTouchButton(btnId, action) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            let interval = null;
+            let timeout = null;
+
+            const start = (e) => {
+                if (e.cancelable) e.preventDefault();
+                btn.classList.add('active-press');
+                action();
+                timeout = setTimeout(() => {
+                    interval = setInterval(() => {
+                        action();
+                    }, 80);
+                }, 220);
+            };
+
+            const stop = (e) => {
+                btn.classList.remove('active-press');
+                clearTimeout(timeout);
+                clearInterval(interval);
+            };
+
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('touchend', stop);
+            btn.addEventListener('touchcancel', stop);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', stop);
+            btn.addEventListener('mouseleave', stop);
+        }
+
+        function bindSingleTouchButton(btnId, action) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            const trigger = (e) => {
+                if (e.cancelable) e.preventDefault();
+                btn.classList.add('active-press');
+                setTimeout(() => btn.classList.remove('active-press'), 120);
+                action();
+            };
+            btn.addEventListener('touchstart', trigger, { passive: false });
+            btn.addEventListener('mousedown', trigger);
+        }
+
+        // Billentyűzet kezelés (P1 és P2 egyszerre támogatott)
+        const keyState = {};
+        window.addEventListener('keydown', (e) => {
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            // Egyszeri gombnyomások (Hold, Rotate, Hard Drop)
+            if (!keyState[e.code]) {
+                keyState[e.code] = true;
+                // 1. Játékos billentyűk
+                if (p1Game) {
+                    if (e.code === 'KeyW' || e.code === 'KeyE') p1Game.rotate(1);
+                    if (e.code === 'KeyQ') p1Game.rotate(-1);
+                    if (e.code === 'Space') p1Game.hardDrop();
+                    if (e.code === 'KeyC' || e.code === 'ShiftLeft') p1Game.hold();
+                }
+
+                // 2. Játékos billentyűk (Osztott képernyős módban)
+                if (isTwoPlayer && p2Game) {
+                    if (e.code === 'ArrowUp') p2Game.rotate(1);
+                    if (e.code === 'Numpad0' || e.code === 'Enter') p2Game.hardDrop();
+                    if (e.code === 'ShiftRight' || e.code === 'Numpad1' || e.code === 'Slash') p2Game.hold();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keyState[e.code] = false;
+        });
+
+        // Folyamatos mozgások ellenőrzése billentyűzeten (Game loop kiegészítés)
+        setInterval(() => {
+            // P1 mozgás
+            if (p1Game && !p1Game.isGameOver) {
+                if (keyState['KeyA']) p1Game.move(-1);
+                if (keyState['KeyD']) p1Game.move(1);
+                if (keyState['KeyS']) p1Game.softDrop();
+            }
+            // P2 mozgás
+            if (isTwoPlayer && p2Game && !p2Game.isGameOver) {
+                if (keyState['ArrowLeft']) p2Game.move(-1);
+                if (keyState['ArrowRight']) p2Game.move(1);
+                if (keyState['ArrowDown']) p2Game.softDrop();
+            }
+        }, 100);
+
+        function handleGarbageP1ToP2(count) {
+            if (isTwoPlayer && p2Game) {
+                p2Game.receiveGarbage(count);
+            }
+        }
+
+        function handleGarbageP2ToP1(count) {
+            if (isTwoPlayer && p1Game) {
+                p1Game.receiveGarbage(count);
+            }
+        }
+
+        function handleGameOver(loserId) {
+            if (isTwoPlayer) {
+                if (loserId === 1 && p2Game && !p2Game.isGameOver) {
+                    p2Game.showOverlay("GYŐZELEM! 🏆", `Pont: ${p2Game.score}`, "fa-crown text-amber-400");
+                } else if (loserId === 2 && p1Game && !p1Game.isGameOver) {
+                    p1Game.showOverlay("GYŐZELEM! 🏆", `Pont: ${p1Game.score}`, "fa-crown text-amber-400");
+                }
+            }
+        }
+
+        // Játékosok inicializálása
+        function initGames() {
+            // 1. Játékos UI referenciák
+            const p1UI = {
+                score: document.getElementById('p1Score'),
+                level: document.getElementById('p1Level'),
+                lines: document.getElementById('p1Lines'),
+                attacks: document.getElementById('p1Attacks'),
+                overlay: document.getElementById('p1Overlay'),
+                overlayTitle: document.getElementById('p1OverlayTitle'),
+                overlayMsg: document.getElementById('p1OverlayMsg'),
+                overlayIcon: document.getElementById('p1OverlayIcon')
+            };
+
+            p1Game = new TetrisGame(1, 'p1Board', 'p1NextCanvas', 'p1HoldCanvas', p1UI, handleGarbageP1ToP2);
+            p1Game.onGameOver = handleGameOver;
+
+            // 2. Játékos UI referenciák
+            const p2UI = {
+                score: document.getElementById('p2Score'),
+                level: document.getElementById('p2Level'),
+                lines: document.getElementById('p2Lines'),
+                attacks: document.getElementById('p2Attacks'),
+                overlay: document.getElementById('p2Overlay'),
+                overlayTitle: document.getElementById('p2OverlayTitle'),
+                overlayMsg: document.getElementById('p2OverlayMsg'),
+                overlayIcon: document.getElementById('p2OverlayIcon')
+            };
+
+            p2Game = new TetrisGame(2, 'p2Board', 'p2NextCanvas', 'p2HoldCanvas', p2UI, handleGarbageP2ToP1);
+            p2Game.onGameOver = handleGameOver;
+
+            // 1. Játékos virtuális érintőgombjainak hozzárendelése
+            bindTouchButton('p1BtnLeft', () => p1Game.move(-1));
+            bindTouchButton('p1BtnRight', () => p1Game.move(1));
+            bindTouchButton('p1BtnDown', () => p1Game.softDrop());
+            bindSingleTouchButton('p1BtnRotRight', () => p1Game.rotate(1));
+            bindSingleTouchButton('p1BtnRotLeft', () => p1Game.rotate(-1));
+            bindSingleTouchButton('p1BtnHardDrop', () => p1Game.hardDrop());
+            bindSingleTouchButton('p1BtnHold', () => p1Game.hold());
+
+            // 2. Játékos virtuális érintőgombjainak hozzárendelése
+            bindTouchButton('p2BtnLeft', () => p2Game.move(-1));
+            bindTouchButton('p2BtnRight', () => p2Game.move(1));
+            bindTouchButton('p2BtnDown', () => p2Game.softDrop());
+            bindSingleTouchButton('p2BtnRotRight', () => p2Game.rotate(1));
+            bindSingleTouchButton('p2BtnRotLeft', () => p2Game.rotate(-1));
+            bindSingleTouchButton('p2BtnHardDrop', () => p2Game.hardDrop());
+            bindSingleTouchButton('p2BtnHold', () => p2Game.hold());
+
+            // Újraindító overlay gombok
+            document.getElementById('p1RestartBtn').addEventListener('click', () => {
+                p1Game.reset();
+                if (isTwoPlayer && p2Game) p2Game.reset();
+            });
+            document.getElementById('p2RestartBtn').addEventListener('click', () => {
+                p2Game.reset();
+                if (p1Game) p1Game.reset();
+            });
+
+            // Indítás
+            p1Game.start();
+            p2Game.start();
+            updateModeDisplay();
+        }
+
+        function updateModeDisplay() {
+            if (isTwoPlayer) {
+                modeText.innerText = "Kétjátékos (Osztott)";
+                player2Section.classList.remove('hidden');
+                gameLayoutContainer.classList.remove('md:grid-cols-1');
+                gameLayoutContainer.classList.add('md:grid-cols-2');
+                document.getElementById('p1Title').innerText = "1. JÁTÉKOS";
+            } else {
+                modeText.innerText = "Egyjátékos Mód";
+                player2Section.classList.add('hidden');
+                gameLayoutContainer.classList.remove('md:grid-cols-2');
+                gameLayoutContainer.classList.add('md:grid-cols-1');
+                document.getElementById('p1Title').innerText = "SZÓLÓ JÁTÉKOS";
+            }
+        }
+
+        modeToggleBtn.addEventListener('click', () => {
+            sound.init();
+            isTwoPlayer = !isTwoPlayer;
+            updateModeDisplay();
+            p1Game.reset();
+            if (isTwoPlayer) {
+                p2Game.reset();
+            }
+        });
+
+        resetAllBtn.addEventListener('click', () => {
+            sound.init();
+            p1Game.reset();
+            if (isTwoPlayer) {
+                p2Game.reset();
+            }
+        });
+
+        soundToggleBtn.addEventListener('click', () => {
+            sound.init();
+            sound.enabled = !sound.enabled;
+            if (sound.enabled) {
+                soundIcon.className = "fa-solid fa-volume-high text-lg text-cyan-400";
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark text-lg text-slate-500";
+            }
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Súgó Modális ablak események
+        helpBtn.addEventListener('click', () => helpModal.classList.remove('hidden'));
+        closeHelpBtn.addEventListener('click', () => helpModal.classList.add('hidden'));
+        closeHelpModalAction.addEventListener('click', () => helpModal.classList.add('hidden'));
+
+        window.addEventListener('load', () => {
+            initGames();
+        });
+    </script>
+</body>
+</html>
