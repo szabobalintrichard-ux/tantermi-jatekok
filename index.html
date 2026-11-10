@@ -885,140 +885,10 @@
       </div>
     </div>
 
-    <!-- === 5. SZÁMOLÓGÉP === -->
-    <div id="view-calc" class="w-full max-w-lg mx-auto bg-slate-900 border-4 border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
-      <div class="bg-slate-950 p-5 rounded-2xl border-2 border-slate-800 text-right flex flex-col justify-end min-h-[110px]">
-        <div id="calcHistory" class="text-sm text-slate-400 font-mono tracking-wider h-6 overflow-hidden"></div>
-        <div id="calcScreen" class="text-4xl md:text-5xl font-mono font-bold text-yellow-300 break-all">0</div>
-      </div>
-
-      <div class="grid grid-cols-4 gap-3">
-        <button onclick="calcClear()" class="p-5 bg-rose-600 active:bg-rose-700 text-white font-bold text-2xl rounded-2xl shadow-lg border-b-4 border-rose-800 active:border-b-0 active:translate-y-1">C</button>
-        <button onclick="calcDel()" class="p-5 bg-slate-800 active:bg-slate-700 text-yellow-400 font-bold text-2xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">⌫</button>
-        <button onclick="calcOp('%')" class="p-5 bg-slate-800 active:bg-slate-700 text-yellow-400 font-bold text-2xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">%</button>
-        <button onclick="calcOp('/')" class="p-5 bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-2xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">÷</button>
-
-        <button onclick="calcNum('7')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">7</button>
-        <button onclick="calcNum('8')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">8</button>
-        <button onclick="calcNum('9')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">9</button>
-        <button onclick="calcOp('*')" class="p-5 bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-2xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">×</button>
-
-        <button onclick="calcNum('4')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">4</button>
-        <button onclick="calcNum('5')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">5</button>
-        <button onclick="calcNum('6')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">6</button>
-        <button onclick="calcOp('-')" class="p-5 bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-3xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">−</button>
-
-        <button onclick="calcNum('1')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">1</button>
-        <button onclick="calcNum('2')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">2</button>
-        <button onclick="calcNum('3')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">3</button>
-        <button onclick="calcOp('+')" class="p-5 bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-3xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1">+</button>
-
-        <button onclick="calcNum('0')" class="col-span-2 p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">0</button>
-        <button onclick="calcNum('.')" class="p-5 bg-slate-800 active:bg-slate-700 text-white font-bold text-3xl rounded-2xl shadow-lg border-b-4 border-slate-950 active:border-b-0 active:translate-y-1">,</button>
-        <button onclick="calcEquals()" class="p-5 bg-emerald-500 active:bg-emerald-600 text-slate-950 font-black text-3xl rounded-2xl shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">=</button>
-      </div>
-    </div>
-
-    <!-- === 6. MÉRTÉKEGYSÉG ÁTVÁLTÓ === -->
-    <div id="view-units" class="w-full max-w-2xl mx-auto bg-slate-900 border-4 border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6">
-      <div class="text-center">
-        <h2 class="text-3xl font-extrabold text-cyan-300">Mértékegység Átváltó</h2>
-        <p class="text-slate-400 text-sm mt-1">Hosszúság, Tömeg, Űrmérték, Hőmérséklet, Terület</p>
-      </div>
-
-      <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
-        <button onclick="setUnitCategory('length')" id="tab-length" class="unit-tab p-3 rounded-2xl bg-cyan-600 text-white font-bold text-sm shadow">Hosszúság</button>
-        <button onclick="setUnitCategory('mass')" id="tab-mass" class="unit-tab p-3 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm">Tömeg</button>
-        <button onclick="setUnitCategory('volume')" id="tab-volume" class="unit-tab p-3 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm">Térfogat</button>
-        <button onclick="setUnitCategory('temperature')" id="tab-temperature" class="unit-tab p-3 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm">Hőmérséklet</button>
-        <button onclick="setUnitCategory('area')" id="tab-area" class="unit-tab p-3 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm">Terület</button>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-        <div class="bg-slate-950 p-5 rounded-2xl border-2 border-slate-800 flex flex-col gap-3">
-          <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Erről:</span>
-          <input type="number" id="unitInputVal" value="1" oninput="convertUnits()" class="w-full text-3xl font-bold bg-transparent border-b-2 border-cyan-500 text-white focus:outline-none py-1">
-          <select id="unitFrom" onchange="convertUnits()" class="bg-slate-800 text-cyan-300 font-bold py-3 px-3 rounded-xl border border-slate-700 text-lg"></select>
-        </div>
-
-        <div class="bg-slate-950 p-5 rounded-2xl border-2 border-slate-800 flex flex-col gap-3">
-          <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Erre:</span>
-          <div id="unitOutputVal" class="text-3xl font-bold text-yellow-300 py-1 border-b-2 border-transparent break-all">0</div>
-          <select id="unitTo" onchange="convertUnits()" class="bg-slate-800 text-yellow-300 font-bold py-3 px-3 rounded-xl border border-slate-700 text-lg"></select>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-center gap-4">
-        <button onclick="adjustUnitVal(-10)" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold border border-slate-700">-10</button>
-        <button onclick="adjustUnitVal(-1)" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold border border-slate-700">-1</button>
-        <button onclick="swapUnits()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl flex items-center gap-2 shadow">
-          <i class="ph-bold ph-arrows-left-right text-xl"></i> Felcserélés
-        </button>
-        <button onclick="adjustUnitVal(1)" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold border border-slate-700">+1</button>
-        <button onclick="adjustUnitVal(10)" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-lg font-bold border border-slate-700">+10</button>
-      </div>
-    </div>
-
-    <!-- === 7. STOPPER ÉS VISSZASZÁMLÁLÓ === -->
-    <div id="view-timer" class="w-full max-w-xl mx-auto bg-slate-900 border-4 border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col items-center gap-6">
-      <h2 class="text-3xl font-extrabold text-amber-300">Táblai Időzítő & Stopper</h2>
-      
-      <div class="w-full bg-slate-950 py-8 px-4 rounded-3xl border-4 border-slate-800 text-center shadow-inner">
-        <span id="timerDisplay" class="text-6xl md:text-8xl font-black font-mono tracking-widest text-white drop-shadow-md">05:00</span>
-      </div>
-
-      <div class="grid grid-cols-4 gap-3 w-full">
-        <button onclick="setTimerMinutes(1)" class="p-3 bg-slate-800 active:bg-slate-700 text-amber-300 font-bold rounded-xl border border-slate-700">+1 perc</button>
-        <button onclick="setTimerMinutes(3)" class="p-3 bg-slate-800 active:bg-slate-700 text-amber-300 font-bold rounded-xl border border-slate-700">+3 perc</button>
-        <button onclick="setTimerMinutes(5)" class="p-3 bg-slate-800 active:bg-slate-700 text-amber-300 font-bold rounded-xl border border-slate-700">+5 perc</button>
-        <button onclick="setTimerMinutes(10)" class="p-3 bg-slate-800 active:bg-slate-700 text-amber-300 font-bold rounded-xl border border-slate-700">+10 perc</button>
-      </div>
-
-      <div class="flex items-center gap-4 w-full">
-        <button id="timerStartBtn" onclick="toggleTimer()" class="flex-1 py-5 bg-emerald-500 hover:bg-emerald-400 active:translate-y-1 text-slate-950 font-black text-2xl rounded-2xl shadow-xl border-b-4 border-emerald-700 flex items-center justify-center gap-3">
-          <i id="timerPlayIcon" class="ph-bold ph-play text-3xl"></i>
-          <span id="timerPlayText">Indítás</span>
-        </button>
-        <button onclick="resetTimer()" class="px-8 py-5 bg-rose-600 hover:bg-rose-500 active:translate-y-1 text-white font-black text-2xl rounded-2xl shadow-xl border-b-4 border-rose-800 flex items-center justify-center gap-2">
-          <i class="ph-bold ph-arrow-counter-clockwise text-3xl"></i>
-          <span>Nulláz</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- === 8. NÉVHÚZÓ ÉS VÉLETLEN SORSOLÓ === -->
-    <div id="view-picker" class="w-full max-w-2xl mx-auto bg-slate-900 border-4 border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6">
-      <div class="text-center">
-        <h2 class="text-3xl font-extrabold text-purple-400">Véletlen Névhúzó & Sorsoló</h2>
-        <p class="text-slate-400 text-sm mt-1">Kitűnő táblás feleltetéshez, csoportbontáshoz vagy számhúzáshoz</p>
-      </div>
-
-      <div class="bg-slate-950 p-8 rounded-3xl border-4 border-purple-500/50 text-center min-h-[140px] flex items-center justify-center shadow-inner">
-        <div id="winnerDisplay" class="text-4xl md:text-5xl font-black text-yellow-300 tracking-wider">
-          Kattints a Sorsolásra!
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-bold text-slate-300 mb-2">Résztvevők / Elemek listája (soronként egy):</label>
-        <textarea id="pickerItems" rows="5" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white text-base focus:outline-none focus:border-purple-400 font-mono">Anna
-Bence
-Csilla
-Dániel
-Eszter
-Ferenc
-Gergő
-Hanna</textarea>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <button onclick="pickWinner()" class="flex-1 py-5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-black text-2xl rounded-2xl shadow-xl border-b-4 border-purple-800 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-3">
-          <i class="ph-bold ph-sparkle text-3xl"></i>
-          <span>SORSOLÁS!</span>
-        </button>
-        <button onclick="pickRandomNumber()" class="px-6 py-5 bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-lg rounded-2xl border border-slate-700">
-          🎲 Dobókocka (1-6)
-        </button>
+<!-- === JÁTÉKOK GYŰJTŐOLDAL === -->
+    <div id="view-games" class="w-full h-full flex flex-col p-4 md:p-8 overflow-y-auto select-none">
+      <div id="gamesGrid" class="max-w-7xl w-full mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4 md:gap-5 auto-rows-fr">
+        <!-- Ide kerülnek a játékok csempéi -->
       </div>
     </div>
 
@@ -2845,291 +2715,6 @@ Hanna</textarea>
       }
     }
   </script>
-
-  <script>
-    /* 7. SZÁMOLÓGÉP */
-    let calcCurrent = '0';
-    let calcEquation = '';
-    let calcResetNext = false;
-
-    function updateCalcDisplay() {
-      const scr = document.getElementById('calcScreen');
-      const hist = document.getElementById('calcHistory');
-      if (scr) scr.textContent = calcCurrent;
-      if (hist) hist.textContent = calcEquation;
-    }
-
-    function calcNum(n) {
-      playBeep('E5');
-      if (calcResetNext) {
-        calcCurrent = '';
-        calcResetNext = false;
-      }
-      if (calcCurrent === '0' && n !== '.') {
-        calcCurrent = n;
-      } else {
-        if (n === '.' && calcCurrent.includes('.')) return;
-        calcCurrent += n;
-      }
-      updateCalcDisplay();
-    }
-
-    function calcOp(op) {
-      playBeep('A5');
-      calcEquation = calcCurrent + ' ' + op + ' ';
-      calcResetNext = true;
-      updateCalcDisplay();
-    }
-
-    function calcClear() {
-      playBeep('C4');
-      calcCurrent = '0';
-      calcEquation = '';
-      updateCalcDisplay();
-    }
-
-    function calcDel() {
-      playBeep('D4');
-      if (calcCurrent.length > 1) {
-        calcCurrent = calcCurrent.slice(0, -1);
-      } else {
-        calcCurrent = '0';
-      }
-      updateCalcDisplay();
-    }
-
-    function calcEquals() {
-      playBeep('C6');
-      try {
-        const expr = (calcEquation + calcCurrent).replace(/×/g, '*').replace(/÷/g, '/');
-        const res = Function('"use strict";return (' + expr + ')')();
-        calcEquation = expr + ' =';
-        calcCurrent = String(Number(res.toFixed(6)));
-        calcResetNext = true;
-        updateCalcDisplay();
-      } catch (e) {
-        calcCurrent = 'Hiba';
-        calcResetNext = true;
-        updateCalcDisplay();
-      }
-    }
-
-    /* 8. MÉRTÉKEGYSÉG ÁTVÁLTÓ */
-    const unitData = {
-      length: {
-        units: { 'mm (Milliméter)': 0.001, 'cm (Centiméter)': 0.01, 'dm (Deciméter)': 0.1, 'm (Méter)': 1, 'km (Kilométer)': 1000, 'inch (Hüvelyk)': 0.0254, 'foot (Láb)': 0.3048 },
-        defaultFrom: 'm (Méter)',
-        defaultTo: 'cm (Centiméter)'
-      },
-      mass: {
-        units: { 'mg (Milligramm)': 0.000001, 'g (Gramm)': 0.001, 'dkg (Dekagramm)': 0.01, 'kg (Kilogramm)': 1, 'q (Mázsa)': 100, 't (Tonna)': 1000 },
-        defaultFrom: 'kg (Kilogramm)',
-        defaultTo: 'g (Gramm)'
-      },
-      volume: {
-        units: { 'ml (Milliliter)': 0.001, 'cl (Centiliter)': 0.01, 'dl (Deciliter)': 0.1, 'l (Liter)': 1, 'hl (Hektoliter)': 100, 'm³ (Köbméter)': 1000 },
-        defaultFrom: 'l (Liter)',
-        defaultTo: 'dl (Deciliter)'
-      },
-      area: {
-        units: { 'mm²': 0.000001, 'cm²': 0.0001, 'dm²': 0.01, 'm²': 1, 'ár': 100, 'ha (hektár)': 10000, 'km²': 1000000 },
-        defaultFrom: 'm²',
-        defaultTo: 'cm²'
-      },
-      temperature: {
-        units: { 'Celsius (°C)': 'C', 'Fahrenheit (°F)': 'F', 'Kelvin (K)': 'K' },
-        defaultFrom: 'Celsius (°C)',
-        defaultTo: 'Fahrenheit (°F)'
-      }
-    };
-
-    let currentUnitCategory = 'length';
-
-    function setUnitCategory(cat) {
-      playBeep('F5');
-      currentUnitCategory = cat;
-      document.querySelectorAll('.unit-tab').forEach(el => {
-        el.className = 'unit-tab p-3 rounded-2xl bg-slate-800 text-slate-300 font-bold text-sm';
-      });
-      const activeTab = document.getElementById('tab-' + cat);
-      if (activeTab) activeTab.className = 'unit-tab p-3 rounded-2xl bg-cyan-600 text-white font-bold text-sm shadow';
-
-      const fromSel = document.getElementById('unitFrom');
-      const toSel = document.getElementById('unitTo');
-      if (!fromSel || !toSel) return;
-      fromSel.innerHTML = '';
-      toSel.innerHTML = '';
-
-      const group = unitData[cat];
-      Object.keys(group.units).forEach(u => {
-        fromSel.innerHTML += '<option value="' + u + '">' + u + '</option>';
-        toSel.innerHTML += '<option value="' + u + '">' + u + '</option>';
-      });
-
-      fromSel.value = group.defaultFrom;
-      toSel.value = group.defaultTo;
-      convertUnits();
-    }
-
-    function convertUnits() {
-      const inp = document.getElementById('unitInputVal');
-      const fromSel = document.getElementById('unitFrom');
-      const toSel = document.getElementById('unitTo');
-      const outEl = document.getElementById('unitOutputVal');
-      if (!inp || !fromSel || !toSel || !outEl) return;
-
-      const val = parseFloat(inp.value);
-      const from = fromSel.value;
-      const to = toSel.value;
-
-      if (isNaN(val)) {
-        outEl.textContent = '0';
-        return;
-      }
-
-      if (currentUnitCategory === 'temperature') {
-        let celsius = val;
-        if (from.includes('Fahrenheit')) celsius = (val - 32) * (5/9);
-        if (from.includes('Kelvin')) celsius = val - 273.15;
-
-        let result = celsius;
-        if (to.includes('Fahrenheit')) result = (celsius * 9/5) + 32;
-        if (to.includes('Kelvin')) result = celsius + 273.15;
-
-        outEl.textContent = Number(result.toFixed(4));
-        return;
-      }
-
-      const base = val * unitData[currentUnitCategory].units[from];
-      const result = base / unitData[currentUnitCategory].units[to];
-      outEl.textContent = Number(result.toFixed(6));
-    }
-
-    function swapUnits() {
-      playBeep('C5');
-      const fromSel = document.getElementById('unitFrom');
-      const toSel = document.getElementById('unitTo');
-      if (!fromSel || !toSel) return;
-      const temp = fromSel.value;
-      fromSel.value = toSel.value;
-      toSel.value = temp;
-      convertUnits();
-    }
-
-    function adjustUnitVal(delta) {
-      playBeep('D5');
-      const inp = document.getElementById('unitInputVal');
-      if (inp) {
-        inp.value = (parseFloat(inp.value) || 0) + delta;
-        convertUnits();
-      }
-    }
-  </script>
-
-  <script>
-    /* 9. STOPPER & IDŐZÍTŐ */
-    let timerSeconds = 300;
-    let timerInterval = null;
-    let timerRunning = false;
-
-    function updateTimerScreen() {
-      const m = Math.floor(timerSeconds / 60);
-      const s = timerSeconds % 60;
-      const text = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-      const el = document.getElementById('timerDisplay');
-      if (el) el.textContent = text;
-    }
-
-    function setTimerMinutes(mins) {
-      playBeep('E5');
-      timerSeconds += mins * 60;
-      updateTimerScreen();
-    }
-
-    function toggleTimer() {
-      playBeep('A5');
-      const btnText = document.getElementById('timerPlayText');
-      const btnIcon = document.getElementById('timerPlayIcon');
-      const btn = document.getElementById('timerStartBtn');
-
-      if (timerRunning) {
-        clearInterval(timerInterval);
-        timerRunning = false;
-        if (btnText) btnText.textContent = 'Folytatás';
-        if (btnIcon) btnIcon.className = 'ph-bold ph-play text-3xl';
-        if (btn) btn.className = 'flex-1 py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-2xl rounded-2xl shadow-xl border-b-4 border-emerald-700 flex items-center justify-center gap-3';
-      } else {
-        if (timerSeconds <= 0) timerSeconds = 60;
-        timerRunning = true;
-        if (btnText) btnText.textContent = 'Szünet';
-        if (btnIcon) btnIcon.className = 'ph-bold ph-pause text-3xl';
-        if (btn) btn.className = 'flex-1 py-5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-2xl rounded-2xl shadow-xl border-b-4 border-yellow-600 flex items-center justify-center gap-3';
-
-        timerInterval = setInterval(() => {
-          if (timerSeconds > 0) {
-            timerSeconds--;
-            updateTimerScreen();
-            if (timerSeconds === 0) {
-              clearInterval(timerInterval);
-              timerRunning = false;
-              playBeep('C6');
-              setTimeout(() => playBeep('G5'), 200);
-              setTimeout(() => playBeep('C6'), 400);
-              if (btnText) btnText.textContent = 'Újraindítás';
-              if (btnIcon) btnIcon.className = 'ph-bold ph-play text-3xl';
-            }
-          }
-        }, 1000);
-      }
-    }
-
-    function resetTimer() {
-      playBeep('C4');
-      clearInterval(timerInterval);
-      timerRunning = false;
-      timerSeconds = 300;
-      const btnText = document.getElementById('timerPlayText');
-      const btnIcon = document.getElementById('timerPlayIcon');
-      if (btnText) btnText.textContent = 'Indítás';
-      if (btnIcon) btnIcon.className = 'ph-bold ph-play text-3xl';
-      updateTimerScreen();
-    }
-
-    /* 10. NÉVHÚZÓ */
-    function pickWinner() {
-      const raw = document.getElementById('pickerItems').value;
-      const items = raw.split('\n').map(s => s.trim()).filter(Boolean);
-      const display = document.getElementById('winnerDisplay');
-      if (items.length === 0) {
-        display.textContent = 'Üres a lista!';
-        return;
-      }
-
-      let counter = 0;
-      const totalTicks = 20;
-
-      const roll = setInterval(() => {
-        const randomPick = items[Math.floor(Math.random() * items.length)];
-        display.textContent = randomPick;
-        playBeep('G5');
-        counter++;
-        if (counter >= totalTicks) {
-          clearInterval(roll);
-          const finalWinner = items[Math.floor(Math.random() * items.length)];
-          display.textContent = '🎉 ' + finalWinner + ' 🎉';
-          playBeep('C6');
-        }
-      }, 60);
-    }
-
-    function pickRandomNumber() {
-      playBeep('E5');
-      const dice = Math.floor(Math.random() * 6) + 1;
-      const display = document.getElementById('winnerDisplay');
-      if (display) display.textContent = '🎲 ' + dice;
-    }
-  </script>
-
   <script>
     function openLibraryBook(url, title) {
     document.getElementById('lib-shelf').classList.add('hidden');
@@ -3320,7 +2905,7 @@ bubbleCanvas.addEventListener('click', stopScreensaver);
 bubbleCanvas.addEventListener('touchstart', stopScreensaver);
 
 resetScreensaverTimer();
-    /* 11. CSEMPÉK ÉS ALKALMAZÁS VÁLTÓ */
+/* 11. CSEMPÉK ÉS ALKALMAZÁS VÁLTÓ */
     const appList = [
       {
         id: 'paint',
@@ -3330,6 +2915,33 @@ resetScreensaverTimer();
         textColor: 'text-white',
         viewId: 'view-paint'
       },
+      {
+        id: 'games',
+        title: 'Játékok',
+        icon: 'ph-game-controller',
+        color: 'from-purple-600 via-pink-500 to-rose-500',
+        textColor: 'text-white',
+        viewId: 'view-games'
+      },
+      {
+        id: 'library',
+        title: 'Könyvtár',
+        icon: 'ph-books',
+        color: 'from-emerald-600 via-teal-600 to-cyan-700',
+        textColor: 'text-white',
+        viewId: 'view-library'
+      },
+      {
+        id: 'wheel_4b',
+        title: '4.b Kerék',
+        icon: 'ph-disc',
+        color: 'from-amber-400 via-rose-400 to-indigo-500',
+        textColor: 'text-white',
+        viewId: 'view-wheel_4b'
+      }
+    ];
+
+    const gamesList = [
       {
         id: 'game_2048',
         title: '2048 Játék',
@@ -3363,13 +2975,13 @@ resetScreensaverTimer();
         viewId: 'view-tetris'
       },
       {
-    id: 'amoba',
-    title: 'Eltűnő Amőba',
-    icon: 'ph-grid-four',
-    color: 'from-indigo-600 via-purple-600 to-rose-500',
-    textColor: 'text-white',
-    viewId: 'view-amoba'
-  },
+        id: 'amoba',
+        title: 'Eltűnő Amőba',
+        icon: 'ph-grid-four',
+        color: 'from-indigo-600 via-purple-600 to-rose-500',
+        textColor: 'text-white',
+        viewId: 'view-amoba'
+      },
       {
         id: 'rubic',
         title: 'Rubik-kocka',
@@ -3377,22 +2989,6 @@ resetScreensaverTimer();
         color: 'from-emerald-500 via-amber-500 to-rose-500',
         textColor: 'text-white',
         viewId: 'view-rubic'
-      },
-     {
-            id: 'library',
-            title: 'Könyvtár',
-            icon: 'ph-books',
-            color: 'from-emerald-600 via-teal-600 to-cyan-700',
-            textColor: 'text-white',
-            viewId: 'view-library'
-        },
-      {
-        id: 'wheel_4b',
-        title: '4.b Kerék',
-        icon: 'ph-disc',
-        color: 'from-amber-400 via-rose-400 to-indigo-500',
-        textColor: 'text-white',
-        viewId: 'view-wheel_4b'
       },
       {
         id: 'math_duel',
@@ -3409,109 +3005,65 @@ resetScreensaverTimer();
         color: 'from-emerald-500 via-teal-600 to-cyan-600',
         textColor: 'text-white',
         viewId: 'view-afifedu'
-      },
-      {
-        id: 'calc',
-        title: 'Számológép',
-        icon: 'ph-calculator',
-        color: 'from-amber-400 to-yellow-600',
-        textColor: 'text-slate-950',
-        viewId: 'view-calc'
-      },
-      {
-        id: 'units',
-        title: 'Mértékegység',
-        icon: 'ph-scales',
-        color: 'from-cyan-500 to-blue-600',
-        textColor: 'text-white',
-        viewId: 'view-units'
-      },
-      {
-        id: 'timer',
-        title: 'Stopper & Idő',
-        icon: 'ph-timer',
-        color: 'from-orange-500 to-rose-600',
-        textColor: 'text-white',
-        viewId: 'view-timer'
-      },
-      {
-        id: 'picker',
-        title: 'Névhúzó & Kocka',
-        icon: 'ph-dice-six',
-        color: 'from-purple-600 to-pink-600',
-        textColor: 'text-white',
-        viewId: 'view-picker'
       }
     ];
 
+    function createTileElement(app) {
+      const tile = document.createElement('div');
+      tile.className = `tile-card relative cursor-pointer bg-gradient-to-br ${app.color} p-4 sm:p-5 rounded-3xl shadow-xl flex flex-col items-center justify-center text-center aspect-square border-4 border-white/20 select-none`;
+      const iconHtml = app.icon.startsWith('ph-')
+        ? `<i class="ph-bold ${app.icon} text-4xl sm:text-5xl md:text-6xl drop-shadow-md"></i>`
+        : `<span class="text-4xl sm:text-5xl md:text-6xl">${app.icon}</span>`;
+      tile.innerHTML = `
+        <div class="flex flex-col items-center justify-center w-full h-full">
+          <div class="flex-1 flex items-center justify-center">
+            ${iconHtml}
+          </div>
+          <div class="mt-1 sm:mt-2 w-full">
+            <span class="block text-sm sm:text-base md:text-lg font-black tracking-wide ${app.textColor || 'text-white'} truncate drop-shadow">
+              ${app.title}
+            </span>
+          </div>
+        </div>
+      `;
+      tile.onclick = () => openApp(app);
+      return tile;
+    }
 
     function renderDashboardTiles() {
       const grid = document.getElementById('tilesGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      appList.forEach(app => {
-        const tile = document.createElement('div');
-        tile.className = `tile-card relative cursor-pointer bg-gradient-to-br ${app.color} p-4 sm:p-5 rounded-3xl shadow-xl flex flex-col items-center justify-center text-center aspect-square border-4 border-white/20 select-none`;
-
-        let iconHtml = '';
-        if (app.icon.startsWith('ph-')) {
-          iconHtml = `<i class="ph-bold ${app.icon} text-4xl sm:text-5xl md:text-6xl drop-shadow-md"></i>`;
-        } else {
-          iconHtml = `<span class="text-4xl sm:text-5xl md:text-6xl">${app.icon}</span>`;
-        }
-
-        tile.innerHTML = `
-          <div class="flex flex-col items-center justify-center w-full h-full">
-            <div class="flex-1 flex items-center justify-center">
-              ${iconHtml}
-            </div>
-            <div class="mt-1 sm:mt-2 w-full">
-              <span class="block text-sm sm:text-base md:text-lg font-black tracking-wide ${app.textColor || 'text-white'} truncate drop-shadow">
-                ${app.title}
-              </span>
-            </div>
-          </div>
-        `;
-
-        tile.onclick = () => openApp(app);
-        grid.appendChild(tile);
-      });
+      if (grid) {
+        grid.innerHTML = '';
+        appList.forEach(app => grid.appendChild(createTileElement(app)));
+      }
+      const gamesGrid = document.getElementById('gamesGrid');
+      if (gamesGrid) {
+        gamesGrid.innerHTML = '';
+        gamesList.forEach(game => gamesGrid.appendChild(createTileElement(game)));
+      }
     }
 
     function openApp(app) {
-  stopScreensaver();
-  playBeep('C5');
-  currentAppActive = app;
+      stopScreensaver();
+      playBeep('C5');
+      currentAppActive = app;
       const container = document.getElementById('appContainer');
       const titleEl = document.getElementById('activeAppTitle');
       const iconEl = document.getElementById('activeAppIcon');
       const frameEl = document.getElementById('appFrame');
       const storage = document.getElementById('appsStorage');
-
-      // Visszatesszük az előző appot a raktárba
       if (frameEl.firstElementChild) {
         storage.appendChild(frameEl.firstElementChild);
       }
-
       titleEl.textContent = app.title;
       iconEl.className = `w-9 h-9 rounded-xl flex items-center justify-center text-xl font-bold bg-gradient-to-tr ${app.color} shadow`;
       iconEl.innerHTML = app.icon.startsWith('ph-') ? `<i class="ph-bold ${app.icon}"></i>` : app.icon;
-
-if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app.id === 'afifedu' || app.id === 'amoba' || app.id === 'rubic' || app.id === 'szinkevero' || app.id === 'game_2048' || app.id === 'scrabble' || app.id === 'tetris') {
-        frameEl.className = "flex-1 w-full h-full p-1 sm:p-2 overflow-hidden flex flex-col bg-slate-950";
-      } else {
-        frameEl.className = "flex-1 w-full h-full p-3 md:p-6 overflow-y-auto flex items-center justify-center bg-slate-950";
-      }
-
+      frameEl.className = "flex-1 w-full h-full p-1 sm:p-2 overflow-hidden flex flex-col bg-slate-950";
       const viewNode = document.getElementById(app.viewId);
       if (viewNode) {
         frameEl.appendChild(viewNode);
       }
-
       container.classList.remove('hidden');
-
-      // Alkalmazás specifikus inicializálások
       if (app.id === 'paint') {
         setTimeout(initPaintEngine, 50);
       } else if (app.id === 'wheel_4b') {
@@ -3530,8 +3082,6 @@ if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app
         if (frame && (!frame.src || frame.src === 'about:blank' || frame.src === window.location.href)) {
           frame.src = 'https://game.afifedu.com/';
         }
-} else if (app.id === 'units') {
-        setUnitCategory(currentUnitCategory);
       } else if (app.id === 'game_2048') {
         setTimeout(init2048Game, 50);
       } else if (app.id === 'tetris') {
@@ -3787,12 +3337,11 @@ if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app
         }
       }, { passive: true });
     }
-    function closeApp() {
+   function closeApp() {
       playBeep('E4');
       const container = document.getElementById('appContainer');
       const frameEl = document.getElementById('appFrame');
       const storage = document.getElementById('appsStorage');
-
       if (duelTimerId) {
         clearInterval(duelTimerId);
         duelTimerId = null;
@@ -3801,11 +3350,18 @@ if (app.id === 'math_duel' || app.id === 'wheel_4b' || app.id === 'paint' || app
         cancelAnimationFrame(window.wheelAnimId);
         window.wheelAnimId = null;
       }
-
+      // --- ÚJ RÉSZ: Játékból kilépve a Játékok menübe térünk vissza ---
+      if (currentAppActive && gamesList.some(g => g.id === currentAppActive.id)) {
+        const gamesMenu = appList.find(a => a.id === 'games');
+        if (gamesMenu) {
+          openApp(gamesMenu);
+          return;
+        }
+      }
+      // --- ÚJ RÉSZ VÉGE ---
       if (frameEl.firstElementChild) {
         storage.appendChild(frameEl.firstElementChild);
       }
-
       container.classList.add('hidden');
       currentAppActive = null;
       resetScreensaverTimer();
