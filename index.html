@@ -2526,24 +2526,23 @@ Hanna</textarea>
       boardHtml += '<div class="w-full border-b-[3px] border-slate-700 my-1 rounded-full"></div>';
 
       boardHtml += '<div class="math-row text-center w-full mt-0.5"><div class="text-slate-400 font-black text-xl sm:text-2xl flex items-center justify-center">=</div>';
-      for (let i = 0; i < cols.length; i++) {
-        boardHtml += '<div id="p' + pNum + '-res-' + i + '" onclick="handleSelectCell(event, ' + pNum + ', ' + i + ')" class="grid-box border-2 border-slate-300 bg-white cursor-pointer text-slate-800"><span class="text-slate-300 text-xl font-black">·</span></div>';
-      }
+    for (let i = 0; i < cols.length; i++) {
+        boardHtml += '<div id="p' + pNum + '-res-' + i + '" onpointerdown="handleSelectCell(event, ' + pNum + ', ' + i + ')" class="grid-box touch-none border-2 border-slate-300 bg-white cursor-pointer text-slate-800"><span class="text-slate-300 text-xl font-black">·</span></div>';
+      } 
       boardHtml += '</div></div>';
       container.innerHTML = boardHtml;
     }
 
     function prepareDuel() {
+      document.querySelectorAll('#view-math_duel button[onclick]').forEach(btn => {
+        const fn = btn.getAttribute('onclick');
+        btn.removeAttribute('onclick');
+        btn.setAttribute('onpointerdown', fn);
+      });
+
       gameActive = false;
       isWaitingForStart = true;
       resetTimerDisplay();
-
-      const winModal = document.getElementById('win-modal');
-      if (winModal) {
-        winModal.classList.add('hidden');
-        winModal.classList.remove('flex');
-      }
-
       const startOverlay = document.getElementById('start-overlay');
       if (startOverlay) {
         startOverlay.classList.remove('hidden');
